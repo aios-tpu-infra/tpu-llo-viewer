@@ -1,0 +1,3748 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LLO Dump Timeline</title>
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --panel: #ffffff;
+      --panel-2: #f1f4f7;
+      --ink: #19202a;
+      --muted: #667085;
+      --line: #d7dde5;
+      --line-strong: #aeb8c5;
+      --accent: #2563eb;
+      --selected: #f6c343;
+      --dep: #0f766e;
+      --region-start: #15803d;
+      --region-end: #b91c1c;
+      --region-empty: #7c3aed;
+      --shadow: 0 8px 24px rgba(24, 35, 51, 0.08);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      overflow: hidden;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .app {
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 56px 1fr;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: auto minmax(280px, 1fr) auto auto;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 14px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      min-width: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 190px;
+    }
+
+    .mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background:
+        linear-gradient(90deg, #2f6fed 0 25%, #24a148 25% 50%, #f97316 50% 75%, #7c3aed 75%);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    }
+
+    .brand-title {
+      font-weight: 700;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .file-actions,
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .primary-button,
+    .ghost-button {
+      border: 1px solid var(--line-strong);
+      background: var(--panel);
+      color: var(--ink);
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .primary-button {
+      border-color: #1d4ed8;
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .primary-button:disabled,
+    .ghost-button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .kernel-select {
+      min-width: 0;
+      width: 100%;
+      height: 34px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--ink);
+      padding: 0 10px;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 13px;
+      min-width: 220px;
+      max-width: 320px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .workspace {
+      min-height: 0;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr);
+    }
+
+    .side {
+      min-height: 0;
+      height: 100%;
+      max-height: calc(100vh - 56px);
+      display: grid;
+      grid-auto-rows: max-content;
+      align-content: start;
+      gap: 12px;
+      padding: 12px;
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      overflow-x: hidden;
+      overflow-y: scroll;
+      scrollbar-gutter: stable;
+      scrollbar-color: #b8c2d0 #eef2f7;
+      scrollbar-width: thin;
+    }
+
+    .side::-webkit-scrollbar,
+    .dep-list::-webkit-scrollbar,
+    .selected-code::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    .side::-webkit-scrollbar-thumb,
+    .dep-list::-webkit-scrollbar-thumb,
+    .selected-code::-webkit-scrollbar-thumb {
+      background: #b8c2d0;
+      border: 2px solid #ffffff;
+      border-radius: 999px;
+    }
+
+    .side::-webkit-scrollbar-track,
+    .dep-list::-webkit-scrollbar-track,
+    .selected-code::-webkit-scrollbar-track {
+      background: #eef2f7;
+    }
+
+    .section {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-2);
+      font-size: 12px;
+      font-weight: 700;
+      color: #344054;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .section-body {
+      padding: 10px 12px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fbfcfe;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .metric-value {
+      margin-top: 3px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      color: #344054;
+      font-size: 12px;
+    }
+
+    .swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+      flex: none;
+    }
+
+    .var-search {
+      display: grid;
+      gap: 8px;
+    }
+
+    .var-search-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .var-search-row input {
+      min-width: 0;
+      height: 32px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      padding: 0 8px;
+      background: #fff;
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+    }
+
+    .search-results {
+      max-height: 260px;
+      margin-top: 0;
+    }
+
+    .search-var {
+      color: #be123c;
+      font-weight: 700;
+    }
+
+    .search-instruction {
+      color: #6d28d9;
+      font-weight: 700;
+    }
+
+    .main {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: 48px 1fr;
+    }
+
+    .controlbar {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) auto auto auto;
+      gap: 12px;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      min-width: 0;
+    }
+
+    .zoom-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .zoom-row label,
+    .cycle-jump label,
+    .check-row label {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .zoom-row input[type="range"] {
+      width: 100%;
+      min-width: 120px;
+    }
+
+    .cycle-jump {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cycle-jump input {
+      width: 110px;
+      height: 32px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      padding: 0 8px;
+      background: #fff;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .check-row input {
+      margin: 0 4px 0 0;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+      background: #fbfcfe;
+    }
+
+    #timelineCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+
+    .tooltip {
+      position: fixed;
+      z-index: 20;
+      max-width: 620px;
+      padding: 10px 12px;
+      color: #111827;
+      background: rgba(255, 255, 255, 0.98);
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      font-size: 12px;
+      pointer-events: none;
+      display: none;
+    }
+
+    .tooltip-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .tooltip-code {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      line-height: 1.35;
+      color: #293241;
+    }
+
+    .selection-empty {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .selected-title {
+      font-weight: 700;
+      margin-bottom: 8px;
+      word-break: break-word;
+    }
+
+    .selected-code {
+      max-height: 132px;
+      overflow: auto;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #0f172a;
+      color: #dbeafe;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .dep-filter-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    .dep-filter-grid label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #344054;
+    }
+
+    .dep-mode-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .dep-mode-row button {
+      height: 30px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: #fff;
+      color: #344054;
+      cursor: pointer;
+    }
+
+    .dep-mode-row button.active {
+      border-color: #1d4ed8;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-weight: 700;
+    }
+
+    .dep-list {
+      margin-top: 10px;
+      display: grid;
+      gap: 8px;
+      max-height: 440px;
+      overflow: auto;
+    }
+
+    .dep-item {
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-left-width: 4px;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .dep-item:hover {
+      border-color: var(--line-strong);
+      background: #f8fafc;
+    }
+
+    .dep-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .dep-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+      color: #263445;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .hint {
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 12px;
+    }
+
+    .progress {
+      height: 6px;
+      background: #e5eaf1;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.12s linear;
+    }
+
+    @media (max-width: 980px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .side {
+        display: none;
+      }
+
+      .topbar {
+        grid-template-columns: auto 1fr;
+      }
+
+      .status,
+      .toolbar-actions {
+        display: none;
+      }
+
+      .controlbar {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div class="brand-title">LLO Dump Timeline</div>
+      </div>
+      <select id="kernelSelect" class="kernel-select" disabled>
+        <option>Import an LLO dump folder</option>
+      </select>
+      <div class="file-actions">
+        <label class="primary-button" for="folderInput">Import Folder</label>
+        <input id="folderInput" class="file-input" type="file" webkitdirectory directory multiple>
+        <button id="reloadButton" class="ghost-button" disabled>Reload Kernel</button>
+      </div>
+      <div id="status" class="status">Waiting for folder</div>
+    </header>
+
+    <div class="workspace">
+      <aside class="side">
+        <section class="section">
+          <div class="section-header">Dataset</div>
+          <div class="section-body">
+            <div class="metric-grid">
+              <div class="metric">
+                <div class="metric-label">Cycles</div>
+                <div id="cycleMetric" class="metric-value">0</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">Instructions</div>
+                <div id="instructionMetric" class="metric-value">0</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">Visible</div>
+                <div id="visibleMetric" class="metric-value">0</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">Deps</div>
+                <div id="depMetric" class="metric-value">0</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">MXU Avg</div>
+                <div id="mxuAvgMetric" class="metric-value">0%</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">MXU Source</div>
+                <div id="mxuSourceMetric" class="metric-value">none</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">VMEM Avg MB</div>
+                <div id="vmemAvgMetric" class="metric-value">0 MB</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">VMEM Source</div>
+                <div id="vmemSourceMetric" class="metric-value">none</div>
+              </div>
+            </div>
+            <div id="progress" class="progress"><div id="progressBar" class="progress-bar"></div></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">Variable Search</div>
+          <div class="section-body var-search">
+            <div class="var-search-row">
+              <input id="variableSearchInput" type="search" placeholder="%180912 or v178797">
+              <button id="variableSearchGoButton" class="ghost-button">Go</button>
+              <button id="variableSearchClearButton" class="ghost-button">Clear</button>
+            </div>
+            <div id="variableSearchSummary" class="hint">Search definitions and uses by partial variable name.</div>
+            <div id="variableSearchResults" class="dep-list search-results"></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">Instruction Search</div>
+          <div class="section-body var-search">
+            <div class="var-search-row">
+              <input id="instructionSearchInput" type="search" placeholder="vmatmul mxu1 or allocation">
+              <button id="instructionSearchGoButton" class="ghost-button">Go</button>
+              <button id="instructionSearchClearButton" class="ghost-button">Clear</button>
+            </div>
+            <div id="instructionSearchSummary" class="hint">Search instruction text by partial opcode, operand, or comment text.</div>
+            <div id="instructionSearchResults" class="dep-list search-results"></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">Colors</div>
+          <div id="legend" class="section-body legend"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">Selection</div>
+          <div id="selectionPanel" class="section-body">
+            <div class="selection-empty">
+              Click an instruction block to highlight the instruction and draw dependency arrows. Hover blocks for cycle, hardware, and full instruction text.
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <main class="main">
+        <div class="controlbar">
+          <div class="zoom-row">
+            <label for="zoomSlider">Zoom X</label>
+            <input id="zoomSlider" type="range" min="0" max="100" value="34">
+            <span id="zoomLabel">12 px/cycle</span>
+          </div>
+          <div class="cycle-jump">
+            <label for="cycleInput">Cycle</label>
+            <input id="cycleInput" type="number" min="0" value="0">
+            <button id="goButton" class="ghost-button">Go</button>
+          </div>
+          <div class="check-row">
+            <label><input id="transitiveToggle" type="checkbox" checked>Full chain</label>
+          </div>
+          <div class="toolbar-actions">
+            <button id="fitButton" class="ghost-button">Fit Width</button>
+            <button id="resetButton" class="ghost-button">Reset</button>
+          </div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="timelineCanvas"></canvas>
+          <div id="tooltip" class="tooltip"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+
+    const hardwareColors = {
+      MXU: "#d9480f",
+      XLU: "#8b5cf6",
+      VALU: "#2563eb",
+      VPOP: "#0891b2",
+      EUP: "#be123c",
+      VLOAD: "#16a34a",
+      VSTORE: "#ca8a04",
+      SALU: "#475569",
+      DMA: "#db2777",
+      SMEM: "#7c2d12",
+      CONTROL: "#111827",
+      OTHER: "#94a3b8"
+    };
+
+    const hardwareOrder = [
+      "MXU", "XLU", "VALU", "VPOP", "EUP", "VLOAD", "VSTORE", "SALU", "DMA", "SMEM", "CONTROL", "OTHER"
+    ];
+
+    const spillFillColors = {
+      SPILL: "#be123c",
+      FILL: "#0369a1"
+    };
+
+    const spillFillLabels = {
+      SPILL: "SPILL tagged",
+      FILL: "FILL tagged"
+    };
+
+    const regionPalette = [
+      "#2563eb", "#16a34a", "#ea580c", "#7c3aed", "#0891b2", "#be123c", "#475569", "#ca8a04"
+    ];
+
+    const regionBoundaryLegend = [
+      { label: "Region start", color: "#15803d" },
+      { label: "Region end", color: "#b91c1c" },
+      { label: "Empty region", color: "#7c3aed" }
+    ];
+
+    const vmemColors = {
+      other: "#16a34a",
+      spill: "#0369a1",
+      empty: "#cbd5e1"
+    };
+
+    const allocationPrefixBytes = 16 * 1024 * 1024;
+
+    const depColors = {
+      ssa: "#2563eb",
+      memoryExact: "#f97316",
+      memoryConservative: "#f59e0b",
+      dmaSemaphore: "#a855f7",
+      control: "#64748b",
+      order: "#334155"
+    };
+
+    const depLabels = {
+      ssa: "SSA data",
+      memoryExact: "Memory exact",
+      memoryConservative: "Memory possible",
+      dmaSemaphore: "DMA/semaphore",
+      control: "Control",
+      order: "Order"
+    };
+
+    const state = {
+      files: [],
+      kernels: [],
+      kernelKey: "",
+      data: null,
+      cycleWidth: 12,
+      zoom: 34,
+      offsetCycle: 0,
+      hoveredId: null,
+      hoveredMxuCycle: null,
+      hoveredVmemCycle: null,
+      hoveredRegionCycle: null,
+      selectedId: null,
+      selectedDeps: [],
+      depDirection: "deps",
+      variableSearchQuery: "",
+      variableSearchMatches: [],
+      variableSearchMatchIds: new Set(),
+      variableSearchVariables: [],
+      instructionSearchQuery: "",
+      instructionSearchMatches: [],
+      instructionSearchMatchIds: new Set(),
+      depFilters: {
+        ssa: true,
+        memoryExact: true,
+        memoryConservative: true,
+        dmaSemaphore: true,
+        control: true,
+        order: true
+      },
+      showTransitive: true,
+      renderedRects: new Map(),
+      dragging: false,
+      dragStartX: 0,
+      dragStartOffset: 0,
+      lastCanvasPoint: null
+    };
+
+    const dom = {
+      folderInput: document.getElementById("folderInput"),
+      kernelSelect: document.getElementById("kernelSelect"),
+      reloadButton: document.getElementById("reloadButton"),
+      status: document.getElementById("status"),
+      cycleMetric: document.getElementById("cycleMetric"),
+      instructionMetric: document.getElementById("instructionMetric"),
+      visibleMetric: document.getElementById("visibleMetric"),
+      depMetric: document.getElementById("depMetric"),
+      mxuAvgMetric: document.getElementById("mxuAvgMetric"),
+      mxuSourceMetric: document.getElementById("mxuSourceMetric"),
+      vmemAvgMetric: document.getElementById("vmemAvgMetric"),
+      vmemSourceMetric: document.getElementById("vmemSourceMetric"),
+      variableSearchInput: document.getElementById("variableSearchInput"),
+      variableSearchGoButton: document.getElementById("variableSearchGoButton"),
+      variableSearchClearButton: document.getElementById("variableSearchClearButton"),
+      variableSearchSummary: document.getElementById("variableSearchSummary"),
+      variableSearchResults: document.getElementById("variableSearchResults"),
+      instructionSearchInput: document.getElementById("instructionSearchInput"),
+      instructionSearchGoButton: document.getElementById("instructionSearchGoButton"),
+      instructionSearchClearButton: document.getElementById("instructionSearchClearButton"),
+      instructionSearchSummary: document.getElementById("instructionSearchSummary"),
+      instructionSearchResults: document.getElementById("instructionSearchResults"),
+      legend: document.getElementById("legend"),
+      selectionPanel: document.getElementById("selectionPanel"),
+      canvas: document.getElementById("timelineCanvas"),
+      tooltip: document.getElementById("tooltip"),
+      zoomSlider: document.getElementById("zoomSlider"),
+      zoomLabel: document.getElementById("zoomLabel"),
+      cycleInput: document.getElementById("cycleInput"),
+      goButton: document.getElementById("goButton"),
+      fitButton: document.getElementById("fitButton"),
+      resetButton: document.getElementById("resetButton"),
+      transitiveToggle: document.getElementById("transitiveToggle"),
+      progress: document.getElementById("progress"),
+      progressBar: document.getElementById("progressBar")
+    };
+
+    const ctx = dom.canvas.getContext("2d");
+
+    init();
+
+    function init() {
+      renderLegend();
+      dom.transitiveToggle.checked = state.showTransitive;
+      bindEvents();
+      applyZoom(state.zoom);
+      render();
+    }
+
+    function bindEvents() {
+      dom.folderInput.addEventListener("change", onFolderChange);
+      dom.kernelSelect.addEventListener("change", () => {
+        state.kernelKey = dom.kernelSelect.value;
+        loadSelectedKernel();
+      });
+      dom.reloadButton.addEventListener("click", loadSelectedKernel);
+      dom.zoomSlider.addEventListener("input", event => {
+        applyZoom(Number(event.target.value));
+        clampOffset();
+        render();
+      });
+      dom.goButton.addEventListener("click", () => jumpToCycle(Number(dom.cycleInput.value)));
+      dom.cycleInput.addEventListener("keydown", event => {
+        if (event.key === "Enter") jumpToCycle(Number(dom.cycleInput.value));
+      });
+      dom.fitButton.addEventListener("click", fitWidth);
+      dom.resetButton.addEventListener("click", resetView);
+      dom.transitiveToggle.addEventListener("change", event => {
+        state.showTransitive = event.target.checked;
+        refreshSelectionDeps();
+        renderSelectionPanel();
+        render();
+      });
+      dom.variableSearchInput.addEventListener("input", () => updateVariableSearch({ jump: false }));
+      dom.variableSearchInput.addEventListener("keydown", event => {
+        if (event.key === "Enter") updateVariableSearch({ jump: true });
+      });
+      dom.variableSearchGoButton.addEventListener("click", () => updateVariableSearch({ jump: true }));
+      dom.variableSearchClearButton.addEventListener("click", clearVariableSearch);
+      dom.instructionSearchInput.addEventListener("input", () => updateInstructionSearch({ jump: false }));
+      dom.instructionSearchInput.addEventListener("keydown", event => {
+        if (event.key === "Enter") updateInstructionSearch({ jump: true });
+      });
+      dom.instructionSearchGoButton.addEventListener("click", () => updateInstructionSearch({ jump: true }));
+      dom.instructionSearchClearButton.addEventListener("click", clearInstructionSearch);
+      window.addEventListener("keydown", onGlobalKeyDown);
+
+      dom.canvas.addEventListener("mousemove", onCanvasMouseMove);
+      dom.canvas.addEventListener("mouseleave", () => {
+        state.hoveredId = null;
+        state.hoveredMxuCycle = null;
+        state.hoveredVmemCycle = null;
+        state.hoveredRegionCycle = null;
+        state.lastCanvasPoint = null;
+        hideTooltip();
+        render();
+      });
+      dom.canvas.addEventListener("click", onCanvasClick);
+      dom.canvas.addEventListener("wheel", onCanvasWheel, { passive: false });
+      dom.canvas.addEventListener("mousedown", event => {
+        rememberCanvasPoint(event);
+        state.dragging = true;
+        state.dragStartX = event.clientX;
+        state.dragStartOffset = state.offsetCycle;
+      });
+      window.addEventListener("mouseup", () => {
+        state.dragging = false;
+      });
+      window.addEventListener("mousemove", event => {
+        if (!state.dragging || !state.data) return;
+        rememberCanvasPoint(event);
+        const deltaCycles = (state.dragStartX - event.clientX) / state.cycleWidth;
+        state.offsetCycle = state.dragStartOffset + deltaCycles;
+        clampOffset();
+        render();
+      });
+
+      window.addEventListener("resize", () => {
+        if (state.data) applyZoom(state.zoom);
+        render();
+      });
+    }
+
+    async function onFolderChange(event) {
+      state.files = Array.from(event.target.files || []);
+      state.kernels = discoverKernels(state.files);
+      populateKernelSelect();
+      if (!state.kernels.length) {
+        setStatus("No *-final_bundles.txt files found");
+        return;
+      }
+      const defaultKernel = state.kernels
+        .slice()
+        .sort((a, b) => (b.files.finalBundles?.size || 0) - (a.files.finalBundles?.size || 0))[0];
+      state.kernelKey = defaultKernel.key;
+      dom.kernelSelect.value = state.kernelKey;
+      await loadSelectedKernel();
+    }
+
+    function discoverKernels(files) {
+      const kernels = new Map();
+      for (const file of files) {
+        const name = file.name || "";
+        const match = name.match(/^(\d+)-(.+)-(\d{2})-(.+)\.txt$/);
+        if (!match) continue;
+        const timestamp = match[1];
+        const kernel = match[2];
+        const pass = match[3];
+        const suffix = match[4];
+        const key = `${timestamp}|${kernel}`;
+        if (!kernels.has(key)) {
+          kernels.set(key, {
+          key,
+          timestamp,
+          kernel,
+          passCount: 0,
+          files: {},
+          allocationCandidates: [],
+          allFiles: []
+        });
+      }
+        const entry = kernels.get(key);
+        entry.passCount += 1;
+        entry.allFiles.push(file);
+        if (suffix === "final_bundles") entry.files.finalBundles = file;
+        if (suffix === "final_hlo-static-per-bundle-utilization") entry.files.finalUtil = file;
+      if (suffix === "pre-delay_hlo-static-per-bundle-utilization") entry.files.preDelayUtil = file;
+      if (suffix === "critical-path") entry.files.criticalPath = file;
+      if (suffix === "post-llo-dependency-graph-optimizations") entry.files.dependencyIr = file;
+      const allocationPriority = allocationSourcePriority(suffix);
+      if (allocationPriority < Number.POSITIVE_INFINITY) {
+        entry.allocationCandidates.push({ file, suffix, priority: allocationPriority });
+      }
+    }
+      for (const kernel of kernels.values()) {
+        kernel.allocationCandidates.sort((a, b) => a.priority - b.priority);
+        if (kernel.allocationCandidates.length) {
+          const selected = kernel.allocationCandidates[0];
+          kernel.files.allocationSource = selected.file;
+          kernel.files.allocationSourceSuffix = selected.suffix;
+        }
+      }
+      return Array.from(kernels.values()).filter(kernel => kernel.files.finalBundles);
+    }
+
+    function allocationSourcePriority(suffix) {
+      if (suffix === "post-bundle-packing-post-ra") return 0;
+      if (suffix === "pre-finalize-registers-and-allocations") return 1;
+      if (suffix === "post-rematerialize-allocations") return 2;
+      if (suffix === "memory-space-assignment-allocinfo") return 3;
+      return Number.POSITIVE_INFINITY;
+    }
+
+    function populateKernelSelect() {
+      dom.kernelSelect.innerHTML = "";
+      if (!state.kernels.length) {
+        const option = document.createElement("option");
+        option.textContent = "No kernels with final_bundles found";
+        dom.kernelSelect.append(option);
+        dom.kernelSelect.disabled = true;
+        dom.reloadButton.disabled = true;
+        return;
+      }
+      for (const kernel of state.kernels) {
+        const option = document.createElement("option");
+        option.value = kernel.key;
+        const extras = [
+          kernel.files.finalUtil ? "util" : "",
+          kernel.files.allocationSource ? "alloc" : "",
+          kernel.files.dependencyIr ? "ir" : ""
+        ].filter(Boolean).join(", ");
+        option.textContent = `${kernel.kernel}  ${kernel.timestamp}  (${formatBytes(kernel.files.finalBundles.size)}${extras ? `, ${extras}` : ""})`;
+        dom.kernelSelect.append(option);
+      }
+      dom.kernelSelect.disabled = false;
+      dom.reloadButton.disabled = false;
+    }
+
+    async function loadSelectedKernel() {
+      const kernel = state.kernels.find(item => item.key === state.kernelKey);
+      if (!kernel) return;
+      state.data = null;
+      state.selectedId = null;
+      state.selectedDeps = [];
+      state.hoveredId = null;
+      state.hoveredMxuCycle = null;
+      state.hoveredVmemCycle = null;
+      state.hoveredRegionCycle = null;
+      clearVariableSearch({ renderNow: false });
+      clearInstructionSearch({ renderNow: false });
+      resetMetrics();
+      renderVariableSearchResults();
+      renderInstructionSearchResults();
+      showProgress(true, 0);
+      setStatus("Reading final_bundles...");
+      try {
+        const bundleText = await kernel.files.finalBundles.text();
+        const utilText = kernel.files.finalUtil ? await kernel.files.finalUtil.text() : "";
+        const allocationText = kernel.files.allocationSource ? await readAllocationPrefix(kernel.files.allocationSource) : "";
+        setStatus("Parsing final_bundles...");
+        const parsed = await parseBundles(bundleText, utilText, allocationText, progress => {
+          showProgress(true, progress);
+          if (progress > 0 && progress < 1) {
+            setStatus(`Parsing ${Math.round(progress * 100)}%`);
+          }
+        });
+        parsed.kernel = kernel;
+        state.data = parsed;
+        applyZoom(state.zoom);
+        state.offsetCycle = parsed.minCycle;
+        dom.cycleInput.min = parsed.minCycle;
+        dom.cycleInput.max = parsed.maxCycle;
+        dom.cycleInput.value = parsed.minCycle;
+        refreshMetrics();
+        showProgress(false, 1);
+        setStatus(`Loaded ${parsed.instructions.length.toLocaleString()} instructions`);
+        renderSelectionPanel();
+        render();
+      } catch (error) {
+        console.error(error);
+        showProgress(false, 0);
+        setStatus(`Load failed: ${error.message}`);
+      }
+    }
+
+    async function readAllocationPrefix(file) {
+      const end = Math.min(file.size, allocationPrefixBytes);
+      return file.slice(0, end).text();
+    }
+
+    async function parseBundles(bundleText, utilText, allocationText, onProgress) {
+      const cycles = new Map();
+      const instructions = [];
+      const defMap = new Map();
+      const constMap = new Map();
+      const lastWriteExact = new Map();
+      const lastWriteBase = new Map();
+      const lastAccessExact = new Map();
+      const recentWritesBySpace = new Map();
+      const lastDmaByFlag = new Map();
+      const lastSemSignal = new Map();
+      const regionEvents = [];
+      const lines = bundleText.split(/\r?\n/);
+      let minCycle = Number.POSITIVE_INFINITY;
+      let maxCycle = 0;
+      let lastControl = null;
+      let regionOrdinal = 0;
+
+      for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+        const parsedLine = parseBundleLine(lines[lineIndex]);
+        if (!parsedLine) {
+          if (lineIndex % 3000 === 0) {
+            onProgress?.(lineIndex / Math.max(1, lines.length));
+            await yieldToBrowser();
+          }
+          continue;
+        }
+        let cycle = cycles.get(parsedLine.cycle);
+        if (!cycle) {
+          cycle = { cycle: parsedLine.cycle, instructions: [], util: null, mxu: null, vmem: null };
+          cycles.set(parsedLine.cycle, cycle);
+        }
+        minCycle = Math.min(minCycle, parsedLine.cycle);
+        maxCycle = Math.max(maxCycle, parsedLine.cycle);
+        for (const event of parsedLine.regionEvents) {
+          regionEvents.push({
+            ...event,
+            cycle: parsedLine.cycle,
+            ordinal: regionOrdinal
+          });
+          regionOrdinal += 1;
+        }
+
+        for (const rawInstruction of parsedLine.instructions) {
+          const parsedInstruction = parseInstruction(rawInstruction);
+          if (!parsedInstruction) continue;
+          const id = instructions.length;
+          const instruction = {
+            id,
+            cycle: parsedLine.cycle,
+            slot: cycle.instructions.length,
+            ordinal: id,
+            raw: parsedInstruction.raw,
+            code: parsedInstruction.code,
+            display: parsedInstruction.display,
+            short: parsedInstruction.short,
+            opcode: parsedInstruction.opcode,
+            hardware: parsedInstruction.hardware,
+            spillFill: parsedInstruction.spillFill,
+            defIds: parsedInstruction.defIds,
+            useIds: parsedInstruction.useIds,
+            memory: parsedInstruction.memory,
+            deps: [],
+            dependents: []
+          };
+          addSsaDeps(instruction, defMap);
+          addMemoryDeps(instruction, {
+            lastWriteExact,
+            lastWriteBase,
+            lastAccessExact,
+            recentWritesBySpace
+          });
+          addDmaAndSemaphoreDeps(instruction, {
+            lastDmaByFlag,
+            lastSemSignal,
+            constMap
+          });
+          addControlDeps(instruction, lastControl);
+          dedupeDeps(instruction);
+          instructions.push(instruction);
+          cycle.instructions.push(instruction);
+          updateConstMap(instruction, constMap);
+          for (const defId of instruction.defIds) {
+            defMap.set(defId, instruction.id);
+          }
+          if (isControlInstruction(instruction)) {
+            lastControl = instruction.id;
+          }
+        }
+
+        if (lineIndex % 3000 === 0) {
+          onProgress?.(lineIndex / Math.max(1, lines.length));
+          await yieldToBrowser();
+        }
+      }
+
+      const cycleList = Array.from(cycles.values()).sort((a, b) => a.cycle - b.cycle);
+      const cycleMap = new Map(cycleList.map(cycle => [cycle.cycle, cycle]));
+      attachDependents(instructions);
+      const variableIndex = buildVariableIndex(instructions);
+      const regionData = buildRegionData(regionEvents, Number.isFinite(minCycle) ? minCycle : 0, maxCycle);
+      const util = parseUtilization(utilText);
+      attachUtilization(cycleList, util);
+      const mxuUtil = buildMxuUtilization(cycleList, util);
+      attachMxuUtilization(cycleList, mxuUtil);
+      const vmemAlloc = buildVmemAllocationTimeline(cycleList, instructions, allocationText);
+      attachVmemAllocation(cycleList, vmemAlloc);
+      onProgress?.(1);
+      return {
+        cycles: cycleList,
+        cycleMap,
+        instructions,
+        instructionMap: new Map(instructions.map(instruction => [instruction.id, instruction])),
+        minCycle: Number.isFinite(minCycle) ? minCycle : 0,
+        maxCycle,
+        maxSlot: cycleList.reduce((max, cycle) => Math.max(max, cycle.instructions.length), 1),
+        variableIndex,
+        regionData,
+        util,
+        mxuUtil,
+        vmemAlloc
+      };
+    }
+
+    function parseBundleLine(line) {
+      const open = line.indexOf("{");
+      const close = line.lastIndexOf("}");
+      if (open < 0 || close <= open) return null;
+      const prefix = line.slice(0, open);
+      const cycleMatch = prefix.match(/^\s*(0x[0-9a-fA-F]+|\d+)(?:\s+[A-Za-z][A-Za-z0-9_]*)?\s*:/);
+      if (!cycleMatch) return null;
+      const cycle = parseNumeric(cycleMatch[1]);
+      const content = line.slice(open + 1, close).trim();
+      const regionEvents = parseRegionEvents(line.slice(close + 1));
+      if (!content) return { cycle, instructions: [], regionEvents };
+      const instructions = content
+        .split(/\s+;;\s+/)
+        .map(part => part.trim())
+        .filter(Boolean);
+      return { cycle, instructions, regionEvents };
+    }
+
+    function parseRegionEvents(text) {
+      const events = [];
+      const regex = /(Start\/End empty|Start|End)\s+region\s+(\d+)/g;
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        const type = match[1] === "Start/End empty" ? "empty" : match[1].toLowerCase();
+        events.push({
+          type,
+          id: Number(match[2])
+        });
+      }
+      return events;
+    }
+
+    function parseInstruction(raw) {
+      const trimmed = raw.trim();
+      if (!trimmed) return null;
+      const codeWithLabels = stripMetadataComment(trimmed);
+      const code = stripBlockComments(codeWithLabels).replace(/\s+/g, " ").trim();
+      const display = compactInstruction(trimmed);
+      const defIds = extractDefIds(code);
+      const useIds = extractUseIds(code, defIds);
+      const opcode = extractOpcode(code);
+      const hardware = classifyHardware(code, opcode);
+      const spillFill = classifySpillFill(trimmed, opcode);
+      const memory = parseMemoryAccesses(trimmed, code, opcode);
+      return {
+        raw: trimmed,
+        code,
+        display,
+        short: makeShortInstruction(code, opcode),
+        opcode,
+        hardware,
+        spillFill,
+        defIds,
+        useIds,
+        memory
+      };
+    }
+
+    function stripMetadataComment(raw) {
+      const markers = [
+        "/* <invalid>",
+        "/* [-",
+        "/* SPILL",
+        "/* FILL",
+        "/* Start",
+        "/* entry",
+        "/* exit"
+      ];
+      let cut = raw.length;
+      for (const marker of markers) {
+        const index = raw.indexOf(marker);
+        if (index >= 0) cut = Math.min(cut, index);
+      }
+      return raw.slice(0, cut).trim() || raw;
+    }
+
+    function stripBlockComments(text) {
+      return text.replace(/\/\*[\s\S]*?\*\//g, " ");
+    }
+
+    function compactInstruction(raw) {
+      const code = stripMetadataComment(raw);
+      return code.replace(/\s+/g, " ").trim();
+    }
+
+    function extractDefIds(code) {
+      const match = code.match(/^\s*(%[A-Za-z0-9_.$]+)\s*=/);
+      return match ? [match[1]] : [];
+    }
+
+    function extractUseIds(code, defIds) {
+      const rhs = code.includes("=") ? code.slice(code.indexOf("=") + 1) : code;
+      const ids = rhs.match(/%[A-Za-z0-9_.$]+/g) || [];
+      const defSet = new Set(defIds);
+      return Array.from(new Set(ids.filter(id => !defSet.has(id))));
+    }
+
+    function extractOpcode(code) {
+      const rhs = code.includes("=") ? code.slice(code.indexOf("=") + 1).trim() : code.trim();
+      const match = rhs.match(/([A-Za-z_][A-Za-z0-9_.-]*)/);
+      return match ? match[1] : "unknown";
+    }
+
+    function classifyHardware(code, opcode) {
+      const lower = `${opcode} ${code}`.toLowerCase();
+      if (/\bdma\./.test(lower)) return "DMA";
+      if (/\b(shalt|sbr|br|yield|return|err)\b/.test(lower)) return "CONTROL";
+      if (/\b(vmat|mxu|matmul|matpush|matprep)\b/.test(lower)) return "MXU";
+      if (/\b(xlu|vrot|transpose)\b/.test(lower)) return "XLU";
+      if (/\b(vld|vload|vector\.load)\b/.test(lower)) return "VLOAD";
+      if (/\b(vst|vstore|vector_store|vector\.store)\b/.test(lower)) return "VSTORE";
+      if (/\b(vpop|spop|vpush)\b/.test(lower)) return "VPOP";
+      if (/\b(eup|math\.exp|exp)\b/.test(lower)) return "EUP";
+      if (/\b(sld|sst)\b/.test(lower)) return "SMEM";
+      if (/\b(vmov|vsel|vadd|vsub|vmul|vpack|vunpack|vector|vcmp|vmax|vmin|vconv|vbitcast|vneg|vabs)\b/.test(lower)) return "VALU";
+      if (/\b(smov|sadd|ssub|smin|smax|sand|sor|sxor|ssh|scmp|scalar_|int_to_ptr|ptr_to_int|pnand|pand|por|pnot)\b/.test(lower)) return "SALU";
+      return "OTHER";
+    }
+
+    function classifySpillFill(raw, opcode) {
+      if (/\bFILL:/.test(raw)) return "FILL";
+      if (/\bSPILL:/.test(raw)) return "SPILL";
+      const codePart = raw.split("/*")[0] || raw;
+      if (!/#allocation\d+_spill\b/.test(codePart)) return "";
+      if (/\b(vld|sld|load)\b/i.test(opcode)) return "FILL";
+      if (/\b(vst|sst|store)\b/i.test(opcode)) return "SPILL";
+      return "";
+    }
+
+    function makeShortInstruction(code, opcode) {
+      const defMatch = code.match(/^\s*(%[A-Za-z0-9_.$]+)\s*=/);
+      if (defMatch) return `${defMatch[1]} = ${opcode}`;
+      return opcode;
+    }
+
+    function parseMemoryAccesses(raw, code, opcode) {
+      const accesses = [];
+      const lower = opcode.toLowerCase();
+      const memoryRegex = /\b([A-Za-z_][A-Za-z0-9_]*):\[\s*([^\]]+)\]/g;
+      const source = stripMetadataComment(raw);
+      let match;
+      while ((match = memoryRegex.exec(source)) !== null) {
+        const space = match[1].toLowerCase();
+        if (!["vmem", "smem", "hbm", "sflag", "cmem", "semaphore_mem"].includes(space)) continue;
+        const address = match[2];
+        const kind = inferMemoryKind(lower, code);
+        accesses.push(makeMemoryAccess(kind, space, address));
+      }
+
+      if (lower === "dma.done") {
+        const doneMatch = code.match(/dma\.done\s+\[([^\]]+)\]/);
+        if (doneMatch) {
+          accesses.push({
+            kind: "syncRead",
+            space: "sflag",
+            raw: doneMatch[1].trim(),
+            exactKey: `sflag:${normalizeAddress(doneMatch[1])}`,
+            baseKey: `sflag:${extractBase(doneMatch[1])}`,
+            conservative: false,
+            flag: extractBase(doneMatch[1])
+          });
+        }
+      }
+
+      if (lower === "dma.general") {
+        const dstFlag = readLabeledOperand(raw, "dst_syncflagno");
+        const srcFlag = readLabeledOperand(raw, "src_syncflagno");
+        if (dstFlag) {
+          accesses.push({
+            kind: "syncWrite",
+            space: "sflag",
+            raw: dstFlag,
+            exactKey: null,
+            baseKey: null,
+            conservative: true,
+            flagOperand: dstFlag
+          });
+        }
+        if (srcFlag) {
+          accesses.push({
+            kind: "syncRead",
+            space: "sflag",
+            raw: srcFlag,
+            exactKey: null,
+            baseKey: null,
+            conservative: true,
+            flagOperand: srcFlag
+          });
+        }
+      }
+
+      if (/\bsem_wait\b|\bsemaphore_wait\b/.test(code)) {
+        const sem = firstAllocationOrAddress(code);
+        accesses.push({
+          kind: "semWait",
+          space: "semaphore",
+          raw: sem,
+          exactKey: sem ? `sem:${sem}` : null,
+          baseKey: sem ? `sem:${sem}` : null,
+          conservative: !sem,
+          flag: sem
+        });
+      }
+
+      if (/\bsem_signal\b|\bsemaphore_signal\b/.test(code)) {
+        const sem = firstAllocationOrAddress(code);
+        accesses.push({
+          kind: "semSignal",
+          space: "semaphore",
+          raw: sem,
+          exactKey: sem ? `sem:${sem}` : null,
+          baseKey: sem ? `sem:${sem}` : null,
+          conservative: !sem,
+          flag: sem
+        });
+      }
+
+      return accesses;
+    }
+
+    function inferMemoryKind(opcode, code) {
+      if (/\b(vld|sld|load)\b/.test(opcode) || /\b(vld|sld|load)\b/.test(code)) return "read";
+      if (/\b(vst|sst|store)\b/.test(opcode) || /\b(vst|sst|store)\b/.test(code)) return "write";
+      return "access";
+    }
+
+    function makeMemoryAccess(kind, space, address) {
+      const normalized = normalizeAddress(address);
+      const base = extractBase(address);
+      const dynamic = /%[A-Za-z0-9_.$]+/.test(address);
+      return {
+        kind,
+        space,
+        raw: address.trim(),
+        exactKey: dynamic ? null : `${space}:${normalized}`,
+        baseKey: `${space}:${base || (dynamic ? "dynamic" : normalized)}`,
+        conservative: dynamic,
+        flag: base
+      };
+    }
+
+    function normalizeAddress(address) {
+      return address.replace(/\s+/g, "").replace(/\$/g, "");
+    }
+
+    function extractBase(address) {
+      const allocation = address.match(/#allocation\d+(?:_spill)?/);
+      if (allocation) return allocation[0];
+      const symbol = address.match(/%[A-Za-z0-9_.$]+/);
+      if (symbol) return "dynamic";
+      return normalizeAddress(address);
+    }
+
+    function firstAllocationOrAddress(text) {
+      const allocation = text.match(/#allocation\d+(?:_spill)?/);
+      if (allocation) return allocation[0];
+      const id = text.match(/%[A-Za-z0-9_.$]+/);
+      if (id) return id[0];
+      return "";
+    }
+
+    function readLabeledOperand(raw, label) {
+      const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`/\\*${escaped}=\\*/\\s*([^,\\s)]+)`);
+      const match = raw.match(regex);
+      return match ? match[1].trim() : "";
+    }
+
+    function addSsaDeps(instruction, defMap) {
+      for (const useId of instruction.useIds) {
+        const source = defMap.get(useId);
+        if (source !== undefined) {
+          instruction.deps.push({ source, type: "ssa", reason: useId, confidence: "exact" });
+        }
+      }
+    }
+
+    function addMemoryDeps(instruction, memoryState) {
+      for (const access of instruction.memory) {
+        if (access.kind === "read" || access.kind === "access") {
+          if (access.exactKey && memoryState.lastWriteExact.has(access.exactKey)) {
+            instruction.deps.push({
+              source: memoryState.lastWriteExact.get(access.exactKey),
+              type: "memoryExact",
+              reason: access.exactKey,
+              confidence: "exact"
+            });
+          }
+          const baseSource = access.baseKey ? memoryState.lastWriteBase.get(access.baseKey) : undefined;
+          if (baseSource !== undefined) {
+            instruction.deps.push({
+              source: baseSource,
+              type: access.exactKey ? "memoryExact" : "memoryConservative",
+              reason: access.baseKey,
+              confidence: access.exactKey ? "exact" : "possible"
+            });
+          }
+          if (!access.exactKey) {
+            const recent = memoryState.recentWritesBySpace.get(access.space) || [];
+            for (const source of recent.slice(-4)) {
+              instruction.deps.push({
+                source,
+                type: "memoryConservative",
+                reason: `${access.space}:dynamic`,
+                confidence: "possible"
+              });
+            }
+          }
+        }
+
+        if (access.kind === "write") {
+          if (access.exactKey && memoryState.lastAccessExact.has(access.exactKey)) {
+            instruction.deps.push({
+              source: memoryState.lastAccessExact.get(access.exactKey),
+              type: "order",
+              reason: `ordered ${access.exactKey}`,
+              confidence: "possible"
+            });
+          }
+          if (access.exactKey) memoryState.lastWriteExact.set(access.exactKey, instruction.id);
+          if (access.baseKey) memoryState.lastWriteBase.set(access.baseKey, instruction.id);
+          const recent = memoryState.recentWritesBySpace.get(access.space) || [];
+          recent.push(instruction.id);
+          while (recent.length > 16) recent.shift();
+          memoryState.recentWritesBySpace.set(access.space, recent);
+        }
+
+        if (access.exactKey) memoryState.lastAccessExact.set(access.exactKey, instruction.id);
+      }
+    }
+
+    function addDmaAndSemaphoreDeps(instruction, dmaState) {
+      for (const access of instruction.memory) {
+        if (access.kind === "syncRead") {
+          const resolved = resolveFlag(access, dmaState.constMap);
+          if (resolved && dmaState.lastDmaByFlag.has(resolved)) {
+            instruction.deps.push({
+              source: dmaState.lastDmaByFlag.get(resolved),
+              type: "dmaSemaphore",
+              reason: resolved,
+              confidence: "exact"
+            });
+          }
+        }
+        if (access.kind === "semWait") {
+          const key = access.flag || access.exactKey || "semaphore:unknown";
+          if (dmaState.lastSemSignal.has(key)) {
+            instruction.deps.push({
+              source: dmaState.lastSemSignal.get(key),
+              type: "dmaSemaphore",
+              reason: key,
+              confidence: "exact"
+            });
+          }
+        }
+      }
+
+      for (const access of instruction.memory) {
+        if (access.kind === "syncWrite") {
+          const resolved = resolveFlag(access, dmaState.constMap);
+          if (resolved) dmaState.lastDmaByFlag.set(resolved, instruction.id);
+        }
+        if (access.kind === "semSignal") {
+          const key = access.flag || access.exactKey || "semaphore:unknown";
+          dmaState.lastSemSignal.set(key, instruction.id);
+        }
+      }
+    }
+
+    function resolveFlag(access, constMap) {
+      if (access.flag && access.flag !== "dynamic") return access.flag;
+      if (access.flagOperand && constMap.has(access.flagOperand)) return constMap.get(access.flagOperand);
+      if (access.raw && constMap.has(access.raw)) return constMap.get(access.raw);
+      if (access.exactKey) return access.exactKey.replace(/^sflag:/, "");
+      return "";
+    }
+
+    function addControlDeps(instruction, lastControl) {
+      if (lastControl === null) return;
+      if (instruction.hardware === "CONTROL") return;
+      if (/\btarget\b|\bregion\b/.test(instruction.raw)) {
+        instruction.deps.push({
+          source: lastControl,
+          type: "control",
+          reason: "region/control flow",
+          confidence: "possible"
+        });
+      }
+    }
+
+    function isControlInstruction(instruction) {
+      return instruction.hardware === "CONTROL" || /\b(sbr|br|yield|return)\b/.test(instruction.opcode);
+    }
+
+    function updateConstMap(instruction, constMap) {
+      if (!instruction.defIds.length) return;
+      const defId = instruction.defIds[0];
+      let match = instruction.code.match(/=\s*smov\s+\[([^\]]+)\]/);
+      if (match) {
+        constMap.set(defId, match[1].trim());
+        return;
+      }
+      match = instruction.code.match(/=\s*smov\s+(#allocation\d+(?:_spill)?)/);
+      if (match) {
+        constMap.set(defId, match[1].trim());
+        return;
+      }
+      const allocationUse = instruction.useIds.map(id => constMap.get(id)).find(value => value && value.startsWith("#allocation"));
+      if (allocationUse && /\b(int_to_ptr|scalar_lea|ssh|sadd|ssub)\b/.test(instruction.opcode)) {
+        constMap.set(defId, allocationUse);
+      }
+    }
+
+    function dedupeDeps(instruction) {
+      const seen = new Set();
+      instruction.deps = instruction.deps.filter(dep => {
+        if (dep.source === instruction.id || dep.source === undefined) return false;
+        const key = `${dep.source}:${dep.type}:${dep.reason}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function attachDependents(instructions) {
+      for (const instruction of instructions) {
+        instruction.dependents = [];
+      }
+      for (const target of instructions) {
+        for (const dep of target.deps) {
+          const source = instructions[dep.source];
+          if (!source) continue;
+          source.dependents.push({
+            source: dep.source,
+            target: target.id,
+            type: dep.type,
+            reason: dep.reason,
+            confidence: dep.confidence
+          });
+        }
+      }
+    }
+
+    function buildVariableIndex(instructions) {
+      const index = new Map();
+      for (const instruction of instructions) {
+        const refs = [
+          ...instruction.defIds.map(name => ({ name, role: "def" })),
+          ...instruction.useIds.map(name => ({ name, role: "use" }))
+        ];
+        const seen = new Set();
+        for (const ref of refs) {
+          const key = normalizeVariableQuery(ref.name);
+          if (!key) continue;
+          const dedupeKey = `${key}:${ref.role}:${instruction.id}`;
+          if (seen.has(dedupeKey)) continue;
+          seen.add(dedupeKey);
+          if (!index.has(key)) {
+            index.set(key, {
+              key,
+              name: ref.name,
+              refs: []
+            });
+          }
+          index.get(key).refs.push({
+            id: instruction.id,
+            role: ref.role
+          });
+        }
+      }
+      return index;
+    }
+
+    function buildRegionData(events, minCycle, maxCycle) {
+      const spans = [];
+      const active = new Map();
+      const stack = [];
+      const eventsByCycle = new Map();
+      for (const event of events) {
+        if (!eventsByCycle.has(event.cycle)) eventsByCycle.set(event.cycle, []);
+        eventsByCycle.get(event.cycle).push(event);
+        if (event.type === "empty") {
+          spans.push({
+            id: event.id,
+            start: event.cycle,
+            end: event.cycle,
+            depth: stack.length,
+            empty: true,
+            partial: false
+          });
+          continue;
+        }
+        if (event.type === "start") {
+          if (active.has(event.id)) {
+            const open = active.get(event.id);
+            spans.push({
+              id: event.id,
+              start: open.start,
+              end: Math.max(open.start, event.cycle),
+              depth: open.depth,
+              empty: false,
+              partial: true
+            });
+            removeRegionFromStack(stack, event.id);
+          }
+          active.set(event.id, {
+            start: event.cycle,
+            depth: stack.length
+          });
+          stack.push(event.id);
+          continue;
+        }
+        if (event.type === "end") {
+          const open = active.get(event.id);
+          if (open) {
+            spans.push({
+              id: event.id,
+              start: open.start,
+              end: Math.max(open.start, event.cycle),
+              depth: open.depth,
+              empty: false,
+              partial: false
+            });
+            active.delete(event.id);
+            removeRegionFromStack(stack, event.id);
+          } else {
+            spans.push({
+              id: event.id,
+              start: minCycle,
+              end: event.cycle,
+              depth: 0,
+              empty: false,
+              partial: true
+            });
+          }
+        }
+      }
+
+      for (const [id, open] of active) {
+        spans.push({
+          id,
+          start: open.start,
+          end: maxCycle,
+          depth: open.depth,
+          empty: false,
+          partial: true
+        });
+      }
+
+      return {
+        events,
+        spans,
+        eventsByCycle,
+        maxDepth: spans.reduce((max, span) => Math.max(max, span.depth), 0)
+      };
+    }
+
+    function removeRegionFromStack(stack, id) {
+      const index = stack.lastIndexOf(id);
+      if (index >= 0) stack.splice(index, 1);
+    }
+
+    function parseUtilization(text) {
+      if (!text) return { capacity: [], rows: [] };
+      const lines = text.split(/\r?\n/);
+      const capacityIndex = lines.findIndex(line => line.startsWith("== CAPACTIY") || line.startsWith("== CAPACITY"));
+      const utilIndex = lines.findIndex(line => line.startsWith("== UTILIZATION"));
+      if (capacityIndex < 0 || utilIndex < 0) return { capacity: [], rows: [] };
+      const labels = (lines[capacityIndex + 1] || "").split(",").map(item => item.trim()).filter(Boolean);
+      const capacities = (lines[capacityIndex + 2] || "").trim().split(/\s+/).map(Number);
+      const capacity = labels.map((name, index) => ({ name, capacity: capacities[index] || 0 }));
+      const rows = [];
+      for (let index = utilIndex + 1; index < lines.length; index += 1) {
+        const line = lines[index].trim();
+        if (!line) continue;
+        const values = line.split(/\s+/).map(Number);
+        if (values.some(Number.isNaN)) continue;
+        rows.push(values);
+      }
+      return { capacity, rows };
+    }
+
+    function attachUtilization(cycles, util) {
+      if (!util.rows.length) return;
+      for (let index = 0; index < cycles.length && index < util.rows.length; index += 1) {
+        cycles[index].util = util.rows[index];
+      }
+    }
+
+    function buildMxuUtilization(cycles, util) {
+      const fromUtil = buildMxuUtilizationFromRows(cycles, util);
+      if (fromUtil) return fromUtil;
+      return buildMxuUtilizationFromInstructions(cycles);
+    }
+
+    function buildMxuUtilizationFromRows(cycles, util) {
+      if (!util.capacity.length || !util.rows.length) return null;
+      const counterColumns = [];
+      const staticColumns = [];
+      for (let index = 0; index < util.capacity.length; index += 1) {
+        const name = util.capacity[index].name || "";
+        const normalized = name.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+        if (/^(COUNTER_)?MXU_BUSY_\d+$/.test(normalized)) {
+          counterColumns.push(index);
+        } else if (normalized === "MXU" || normalized.startsWith("MXU_")) {
+          staticColumns.push(index);
+        }
+      }
+      const columns = counterColumns.length ? counterColumns : staticColumns;
+      if (!columns.length) return null;
+      const capacitySum = columns.reduce((sum, index) => {
+        const value = Number(util.capacity[index].capacity);
+        return sum + (Number.isFinite(value) && value > 0 ? value : 0);
+      }, 0);
+      const capacity = Math.max(1, capacitySum || columns.length);
+      const rows = cycles.map((cycle, index) => {
+        const values = util.rows[index] || [];
+        const busy = columns.reduce((sum, column) => {
+          const value = Number(values[column]);
+          return sum + (Number.isFinite(value) && value > 0 ? value : 0);
+        }, 0);
+        return makeMxuRow(cycle.cycle, busy, capacity);
+      });
+      const sourceKind = counterColumns.length ? "counter" : "final_hlo";
+      const source = counterColumns.length ? "COUNTER_MXU_BUSY columns" : "final_hlo MXU utilization";
+      const labels = columns.map(index => util.capacity[index].name);
+      return summarizeMxuRows(rows, source, sourceKind, labels);
+    }
+
+    function buildMxuUtilizationFromInstructions(cycles) {
+      let maxLane = -1;
+      let maxBusy = 0;
+      const preliminary = cycles.map(cycle => {
+        const mxuInstructions = cycle.instructions.filter(instruction => instruction.hardware === "MXU");
+        const lanes = new Set();
+        for (const instruction of mxuInstructions) {
+          const matches = instruction.code.matchAll(/\bmxu(\d+)\b/gi);
+          for (const match of matches) {
+            const lane = Number(match[1]);
+            if (Number.isFinite(lane)) {
+              lanes.add(lane);
+              maxLane = Math.max(maxLane, lane);
+            }
+          }
+        }
+        const busy = lanes.size ? lanes.size : (mxuInstructions.length ? 1 : 0);
+        maxBusy = Math.max(maxBusy, busy);
+        return { cycle: cycle.cycle, busy };
+      });
+      const capacity = Math.max(1, maxLane + 1, maxBusy);
+      const rows = preliminary.map(row => makeMxuRow(row.cycle, row.busy, capacity));
+      return summarizeMxuRows(rows, "inferred from MXU instructions", "inferred", []);
+    }
+
+    function makeMxuRow(cycle, busy, capacity) {
+      const normalizedCapacity = Math.max(1, capacity || 1);
+      const normalizedBusy = Math.max(0, busy || 0);
+      return {
+        cycle,
+        busy: normalizedBusy,
+        capacity: normalizedCapacity,
+        ratio: Math.max(0, Math.min(1, normalizedBusy / normalizedCapacity))
+      };
+    }
+
+    function summarizeMxuRows(rows, source, sourceKind, labels) {
+      const average = rows.length ? rows.reduce((sum, row) => sum + row.ratio, 0) / rows.length : 0;
+      const peak = rows.reduce((max, row) => Math.max(max, row.ratio), 0);
+      const capacity = rows.reduce((max, row) => Math.max(max, row.capacity), 1);
+      return {
+        source,
+        sourceKind,
+        labels,
+        rows,
+        rowMap: new Map(rows.map(row => [row.cycle, row])),
+        average,
+        peak,
+        capacity
+      };
+    }
+
+    function attachMxuUtilization(cycles, mxuUtil) {
+      if (!mxuUtil) return;
+      for (const cycle of cycles) {
+        cycle.mxu = mxuUtil.rowMap.get(cycle.cycle) || makeMxuRow(cycle.cycle, 0, mxuUtil.capacity);
+      }
+    }
+
+    function buildVmemAllocationTimeline(cycles, instructions, allocationText) {
+      const allocations = parseVmemAllocations(allocationText);
+      if (!allocations.size) return null;
+      const ranges = collectVmemAllocationRanges(instructions, allocations);
+      const rows = buildVmemAllocationRows(cycles, ranges, allocations);
+      const totalDeclaredBytes = Array.from(allocations.values()).reduce((sum, allocation) => sum + allocation.sizeBytes, 0);
+      const declaredSpillBytes = Array.from(allocations.values()).reduce((sum, allocation) => sum + (allocation.isSpill ? allocation.sizeBytes : 0), 0);
+      const averageBytes = rows.length ? rows.reduce((sum, row) => sum + row.totalBytes, 0) / rows.length : 0;
+      const peakBytes = rows.reduce((max, row) => Math.max(max, row.totalBytes), 0);
+      const peakRow = rows.reduce((best, row) => row.totalBytes > (best?.totalBytes || 0) ? row : best, null);
+      return {
+        source: "allocation size + final_bundles first/last reference",
+        sourceKind: "alloc",
+        allocations,
+        ranges,
+        rows,
+        rowMap: new Map(rows.map(row => [row.cycle, row])),
+        averageBytes,
+        peakBytes,
+        peakCycle: peakRow?.cycle ?? null,
+        capacityBytes: Math.max(1, peakBytes || totalDeclaredBytes),
+        totalDeclaredBytes,
+        declaredSpillBytes,
+        declaredOtherBytes: totalDeclaredBytes - declaredSpillBytes
+      };
+    }
+
+    function parseVmemAllocations(text) {
+      const allocations = new Map();
+      if (!text) return allocations;
+      const lines = text.split(/\r?\n/);
+      for (const line of lines) {
+        const match = line.match(/(#allocation\d+(?:_spill)?)\s+\[(.*)\]/);
+        if (!match) continue;
+        const body = match[2];
+        const space = readAllocationField(body, "space");
+        if (space !== "vmem") continue;
+        const sizeBytes = parseNumeric(readAllocationField(body, "size"));
+        if (!Number.isFinite(sizeBytes) || sizeBytes <= 0) continue;
+        const tag = readQuotedAllocationField(body, "tag");
+        const shape = readQuotedAllocationField(body, "shape");
+        const offsetText = readAllocationField(body, "offset");
+        const offset = offsetText ? parseNumeric(offsetText) : null;
+        const id = match[1];
+        allocations.set(id, {
+          id,
+          sizeBytes,
+          offset,
+          tag,
+          shape,
+          isSpill: /_spill\b/.test(id) || /spilled/i.test(tag),
+          firstCycle: null,
+          lastCycle: null,
+          useCount: 0
+        });
+      }
+      return allocations;
+    }
+
+    function readAllocationField(body, field) {
+      const regex = new RegExp(`${field}\\s*=\\s*([^,\\]]+)`);
+      const match = body.match(regex);
+      return match ? match[1].trim() : "";
+    }
+
+    function readQuotedAllocationField(body, field) {
+      const regex = new RegExp(`${field}\\s*=\\s*'([^']*)'`);
+      const match = body.match(regex);
+      return match ? match[1] : "";
+    }
+
+    function collectVmemAllocationRanges(instructions, allocations) {
+      for (const instruction of instructions) {
+        for (const id of extractAllocationIds(`${instruction.code} ${instruction.raw}`)) {
+          const allocation = allocations.get(id);
+          if (!allocation) continue;
+          allocation.firstCycle = allocation.firstCycle === null ? instruction.cycle : Math.min(allocation.firstCycle, instruction.cycle);
+          allocation.lastCycle = allocation.lastCycle === null ? instruction.cycle : Math.max(allocation.lastCycle, instruction.cycle);
+          allocation.useCount += 1;
+        }
+      }
+      return Array.from(allocations.values())
+        .filter(allocation => allocation.firstCycle !== null && allocation.lastCycle !== null)
+        .sort((a, b) => a.firstCycle - b.firstCycle || b.sizeBytes - a.sizeBytes);
+    }
+
+    function extractAllocationIds(text) {
+      const matches = text.match(/#allocation\d+(?:_spill)?/g) || [];
+      return Array.from(new Set(matches));
+    }
+
+    function buildVmemAllocationRows(cycles, ranges, allocations) {
+      const events = [];
+      for (const allocation of ranges) {
+        const kind = allocation.isSpill ? "spill" : "other";
+        events.push({
+          cycle: allocation.firstCycle,
+          otherDelta: kind === "other" ? allocation.sizeBytes : 0,
+          spillDelta: kind === "spill" ? allocation.sizeBytes : 0,
+          otherCountDelta: kind === "other" ? 1 : 0,
+          spillCountDelta: kind === "spill" ? 1 : 0
+        });
+        events.push({
+          cycle: allocation.lastCycle + 1,
+          otherDelta: kind === "other" ? -allocation.sizeBytes : 0,
+          spillDelta: kind === "spill" ? -allocation.sizeBytes : 0,
+          otherCountDelta: kind === "other" ? -1 : 0,
+          spillCountDelta: kind === "spill" ? -1 : 0
+        });
+      }
+      events.sort((a, b) => a.cycle - b.cycle);
+
+      let eventIndex = 0;
+      let otherBytes = 0;
+      let spillBytes = 0;
+      let otherCount = 0;
+      let spillCount = 0;
+      const rows = [];
+      const provisional = [];
+      let peakBytes = 0;
+      for (const cycle of cycles) {
+        while (eventIndex < events.length && events[eventIndex].cycle <= cycle.cycle) {
+          const event = events[eventIndex];
+          otherBytes += event.otherDelta;
+          spillBytes += event.spillDelta;
+          otherCount += event.otherCountDelta;
+          spillCount += event.spillCountDelta;
+          eventIndex += 1;
+        }
+        const totalBytes = Math.max(0, otherBytes + spillBytes);
+        peakBytes = Math.max(peakBytes, totalBytes);
+        provisional.push({
+          cycle: cycle.cycle,
+          otherBytes: Math.max(0, otherBytes),
+          spillBytes: Math.max(0, spillBytes),
+          otherCount: Math.max(0, otherCount),
+          spillCount: Math.max(0, spillCount)
+        });
+      }
+      const declaredBytes = Array.from(allocations.values()).reduce((sum, allocation) => sum + allocation.sizeBytes, 0);
+      const capacityBytes = Math.max(1, peakBytes || declaredBytes);
+      for (const row of provisional) {
+        rows.push(makeVmemAllocationRow(row.cycle, row.otherBytes, row.spillBytes, row.otherCount, row.spillCount, capacityBytes));
+      }
+      return rows;
+    }
+
+    function makeVmemAllocationRow(cycle, otherBytes, spillBytes, otherCount, spillCount, capacityBytes) {
+      const totalBytes = Math.max(0, otherBytes + spillBytes);
+      const normalizedCapacity = Math.max(1, capacityBytes || 1);
+      return {
+        cycle,
+        otherBytes: Math.max(0, otherBytes || 0),
+        spillBytes: Math.max(0, spillBytes || 0),
+        totalBytes,
+        capacityBytes: normalizedCapacity,
+        ratio: Math.max(0, Math.min(1, totalBytes / normalizedCapacity)),
+        otherCount: Math.max(0, otherCount || 0),
+        spillCount: Math.max(0, spillCount || 0),
+        totalCount: Math.max(0, (otherCount || 0) + (spillCount || 0))
+      };
+    }
+
+    function attachVmemAllocation(cycles, vmemAlloc) {
+      if (!vmemAlloc) return;
+      for (const cycle of cycles) {
+        cycle.vmem = vmemAlloc.rowMap.get(cycle.cycle) || makeVmemAllocationRow(cycle.cycle, 0, 0, 0, 0, vmemAlloc.capacityBytes);
+      }
+    }
+
+    function renderLegend() {
+      dom.legend.innerHTML = "";
+      for (const kind of ["SPILL", "FILL"]) {
+        const item = document.createElement("div");
+        item.className = "legend-item";
+        const swatch = document.createElement("span");
+        swatch.className = "swatch";
+        swatch.style.background = spillFillColors[kind];
+        item.append(swatch, document.createTextNode(spillFillLabels[kind]));
+        dom.legend.append(item);
+      }
+      for (const entry of regionBoundaryLegend) {
+        const item = document.createElement("div");
+        item.className = "legend-item";
+        const swatch = document.createElement("span");
+        swatch.className = "swatch";
+        swatch.style.background = entry.color;
+        item.append(swatch, document.createTextNode(entry.label));
+        dom.legend.append(item);
+      }
+      for (const entry of [
+        { label: "VMEM other MB", color: vmemColors.other },
+        { label: "VMEM spill MB", color: vmemColors.spill }
+      ]) {
+        const item = document.createElement("div");
+        item.className = "legend-item";
+        const swatch = document.createElement("span");
+        swatch.className = "swatch";
+        swatch.style.background = entry.color;
+        item.append(swatch, document.createTextNode(entry.label));
+        dom.legend.append(item);
+      }
+      for (const hardware of hardwareOrder) {
+        const item = document.createElement("div");
+        item.className = "legend-item";
+        const swatch = document.createElement("span");
+        swatch.className = "swatch";
+        swatch.style.background = hardwareColors[hardware];
+        item.append(swatch, document.createTextNode(hardware));
+        dom.legend.append(item);
+      }
+    }
+
+    function render() {
+      resizeCanvas();
+      const width = dom.canvas.clientWidth;
+      const height = dom.canvas.clientHeight;
+      ctx.clearRect(0, 0, width, height);
+      drawBackground(width, height);
+      if (!state.data) {
+        drawEmptyState(width, height);
+        return;
+      }
+      clampOffset();
+      state.renderedRects.clear();
+      const layout = getLayout(width, height);
+      drawAxes(layout);
+      drawRegionTrack(layout);
+      drawMxuUtilization(layout);
+      drawVmemUtilization(layout);
+      drawInstructions(layout);
+      drawRegionBoundaries(layout);
+      drawDependencyArrows(layout);
+      drawViewportStats(layout);
+    }
+
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.max(1, dom.canvas.clientWidth);
+      const height = Math.max(1, dom.canvas.clientHeight);
+      const targetWidth = Math.floor(width * dpr);
+      const targetHeight = Math.floor(height * dpr);
+      if (dom.canvas.width !== targetWidth || dom.canvas.height !== targetHeight) {
+        dom.canvas.width = targetWidth;
+        dom.canvas.height = targetHeight;
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function getLayout(width, height) {
+      const left = 74;
+      const axisHeight = 32;
+      const regionHeight = state.data?.regionData?.events.length ? 30 : 0;
+      const regionTop = axisHeight;
+      const mxuTop = axisHeight + regionHeight;
+      const mxuHeight = Math.max(44, Math.min(64, height * 0.12));
+      const vmemHeight = state.data?.vmemAlloc ? Math.max(38, Math.min(52, height * 0.09)) : 0;
+      const vmemTop = axisHeight + regionHeight + mxuHeight;
+      const instructionTop = axisHeight + regionHeight + mxuHeight + vmemHeight + 8;
+      const rowHeight = Math.max(22, Math.min(34, state.cycleWidth * 0.55 + 20));
+      const blockHeight = Math.max(14, rowHeight - 6);
+      const visibleCycles = Math.max(1, Math.ceil((width - left - 12) / state.cycleWidth));
+      const startCycle = Math.floor(state.offsetCycle);
+      const endCycle = Math.min(state.data.maxCycle, startCycle + visibleCycles + 2);
+      const maxVisibleRows = Math.max(1, Math.floor((height - instructionTop - 18) / rowHeight));
+      const maxRows = Math.min(Math.max(state.data.maxSlot, 1), maxVisibleRows);
+      return {
+        width,
+        height,
+        left,
+        top: instructionTop,
+        axisHeight,
+        regionTop,
+        regionHeight,
+        mxuTop,
+        mxuHeight,
+        vmemTop,
+        vmemHeight,
+        rowHeight,
+        blockHeight,
+        startCycle,
+        endCycle,
+        visibleCycles,
+        maxRows
+      };
+    }
+
+    function drawBackground(width, height) {
+      ctx.fillStyle = "#fbfcfe";
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    function drawEmptyState(width, height) {
+      ctx.fillStyle = "#475569";
+      ctx.font = "600 18px Inter, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("Import an LLO dump folder to build the timeline", width / 2, height / 2 - 14);
+      ctx.fillStyle = "#667085";
+      ctx.font = "13px Inter, sans-serif";
+      ctx.fillText("The parser looks for *-final_bundles.txt plus optional utilization and allocation files.", width / 2, height / 2 + 14);
+    }
+
+    function drawAxes(layout) {
+      const { width, height, left, top, axisHeight, regionTop, regionHeight, mxuTop, mxuHeight, vmemTop, vmemHeight, rowHeight, startCycle, endCycle, maxRows } = layout;
+      ctx.fillStyle = "#f1f4f7";
+      ctx.fillRect(0, 0, width, axisHeight);
+      ctx.fillRect(0, axisHeight, left, height - axisHeight);
+      if (regionHeight) {
+        ctx.fillStyle = "#fff7ed";
+        ctx.fillRect(left, regionTop, width - left, regionHeight);
+      }
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillRect(left, mxuTop, width - left, mxuHeight);
+      if (vmemHeight) {
+        ctx.fillStyle = "#f7fbf8";
+        ctx.fillRect(left, vmemTop, width - left, vmemHeight);
+      }
+
+      ctx.strokeStyle = "#d7dde5";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(left, 0);
+      ctx.lineTo(left, height);
+      ctx.moveTo(0, axisHeight);
+      ctx.lineTo(width, axisHeight);
+      if (regionHeight) {
+        ctx.moveTo(0, regionTop + regionHeight);
+        ctx.lineTo(width, regionTop + regionHeight);
+      }
+      ctx.moveTo(0, mxuTop + mxuHeight);
+      ctx.lineTo(width, mxuTop + mxuHeight);
+      if (vmemHeight) {
+        ctx.moveTo(0, vmemTop + vmemHeight);
+        ctx.lineTo(width, vmemTop + vmemHeight);
+      }
+      ctx.moveTo(0, top);
+      ctx.lineTo(width, top);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#e8edf4";
+      ctx.beginPath();
+      ctx.moveTo(left, mxuTop + mxuHeight / 2);
+      ctx.lineTo(width, mxuTop + mxuHeight / 2);
+      if (vmemHeight) {
+        ctx.moveTo(left, vmemTop + vmemHeight / 2);
+        ctx.lineTo(width, vmemTop + vmemHeight / 2);
+      }
+      ctx.stroke();
+
+      const labelEvery = chooseCycleLabelStep(state.cycleWidth);
+      ctx.fillStyle = "#475569";
+      ctx.font = "11px Inter, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      if (state.cycleWidth > 18) {
+        for (let cycle = startCycle; cycle <= endCycle; cycle += 1) {
+          if (cycle % labelEvery === 0) continue;
+          const x = left + (cycle - state.offsetCycle) * state.cycleWidth;
+          ctx.strokeStyle = "#eef2f7";
+          ctx.beginPath();
+          ctx.moveTo(x, axisHeight);
+          ctx.lineTo(x, height);
+          ctx.stroke();
+        }
+      }
+      const firstLabelCycle = Math.ceil(startCycle / labelEvery) * labelEvery;
+      for (let cycle = firstLabelCycle; cycle <= endCycle; cycle += labelEvery) {
+        const x = left + (cycle - state.offsetCycle) * state.cycleWidth;
+        ctx.strokeStyle = "#d7dde5";
+        ctx.beginPath();
+        ctx.moveTo(x, axisHeight);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+        ctx.fillText(formatCycle(cycle), x, axisHeight / 2);
+      }
+
+      ctx.textAlign = "right";
+      if (regionHeight) {
+        ctx.fillStyle = "#344054";
+        ctx.font = "600 11px Inter, sans-serif";
+        ctx.fillText("Regions", left - 10, regionTop + regionHeight / 2);
+      }
+      ctx.fillStyle = "#344054";
+      ctx.font = "600 11px Inter, sans-serif";
+      ctx.fillText("MXU util", left - 10, mxuTop + mxuHeight / 2);
+      ctx.font = "10px Inter, sans-serif";
+      ctx.fillStyle = "#667085";
+      ctx.fillText("100%", left - 10, mxuTop + 9);
+      ctx.fillText("0%", left - 10, mxuTop + mxuHeight - 7);
+      if (vmemHeight) {
+        ctx.fillStyle = "#344054";
+        ctx.font = "600 11px Inter, sans-serif";
+        ctx.fillText("VMEM MB", left - 10, vmemTop + vmemHeight / 2);
+        ctx.font = "10px Inter, sans-serif";
+        ctx.fillStyle = "#667085";
+        ctx.fillText(formatMegabytes(state.data?.vmemAlloc?.capacityBytes || 0), left - 10, vmemTop + 9);
+        ctx.fillText("0 MB", left - 10, vmemTop + vmemHeight - 7);
+      }
+      for (let row = 0; row < maxRows; row += 1) {
+        const y = top + row * rowHeight;
+        ctx.strokeStyle = "#edf1f6";
+        ctx.beginPath();
+        ctx.moveTo(left, y + rowHeight);
+        ctx.lineTo(width, y + rowHeight);
+        ctx.stroke();
+        ctx.fillStyle = "#667085";
+        ctx.fillText(`slot ${row}`, left - 10, y + rowHeight / 2);
+      }
+    }
+
+    function drawRegionTrack(layout) {
+      const regionData = state.data?.regionData;
+      if (!regionData?.events.length || !layout.regionHeight) return;
+      const { left, width, regionTop, regionHeight, startCycle, endCycle } = layout;
+      const laneCount = Math.max(1, Math.min(4, Math.floor((regionHeight - 8) / 5)));
+      const laneHeight = Math.max(4, (regionHeight - 8) / laneCount);
+      for (const span of regionData.spans) {
+        if (span.end < startCycle || span.start > endCycle) continue;
+        const start = Math.max(span.start, startCycle);
+        const end = Math.min(span.end, endCycle);
+        const x1 = left + (start - state.offsetCycle) * state.cycleWidth;
+        const x2 = left + (end + 1 - state.offsetCycle) * state.cycleWidth;
+        const widthPx = Math.max(1, x2 - x1);
+        const lane = Math.abs(span.depth) % laneCount;
+        const y = regionTop + 4 + lane * laneHeight;
+        ctx.save();
+        ctx.globalAlpha = span.empty ? 0.35 : (span.partial ? 0.18 : 0.24);
+        ctx.fillStyle = regionColor(span.id);
+        ctx.fillRect(x1, y, widthPx, Math.max(3, laneHeight - 1));
+        ctx.restore();
+        if (widthPx > 36 && state.cycleWidth > 0.2) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(x1, regionTop + 1, widthPx, regionHeight - 2);
+          ctx.clip();
+          ctx.fillStyle = "#334155";
+          ctx.font = "10px Inter, sans-serif";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "middle";
+          ctx.fillText(`r${span.id}`, x1 + 3, y + laneHeight / 2, Math.max(0, widthPx - 6));
+          ctx.restore();
+        }
+      }
+    }
+
+    function drawRegionBoundaries(layout) {
+      const regionData = state.data?.regionData;
+      if (!regionData?.events.length || !layout.regionHeight) return;
+      const { left, width, height, regionTop, startCycle, endCycle } = layout;
+      const drawnCycles = new Set();
+      for (const event of regionData.events) {
+        if (event.cycle < startCycle || event.cycle > endCycle || drawnCycles.has(event.cycle)) continue;
+        drawnCycles.add(event.cycle);
+        const eventsAtCycle = regionData.eventsByCycle.get(event.cycle) || [];
+        const x = left + (event.cycle - state.offsetCycle) * state.cycleWidth;
+        if (x < left - 2 || x > width + 2) continue;
+        ctx.save();
+        ctx.strokeStyle = regionBoundaryColor(eventsAtCycle);
+        ctx.globalAlpha = 0.55;
+        ctx.lineWidth = state.hoveredRegionCycle === event.cycle ? 2.2 : 1.2;
+        if (eventsAtCycle.some(item => item.type === "empty")) ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(x, regionTop);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+        ctx.restore();
+
+        if (state.cycleWidth >= 14) {
+          ctx.save();
+          ctx.fillStyle = regionBoundaryColor(eventsAtCycle);
+          ctx.font = "10px Inter, sans-serif";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "top";
+          ctx.fillText(regionEventShortLabel(eventsAtCycle), x + 3, regionTop + 2, 90);
+          ctx.restore();
+        }
+      }
+    }
+
+    function regionColor(id) {
+      return regionPalette[Math.abs(id) % regionPalette.length];
+    }
+
+    function regionBoundaryColor(events) {
+      const hasStart = events.some(event => event.type === "start");
+      const hasEnd = events.some(event => event.type === "end");
+      const hasEmpty = events.some(event => event.type === "empty");
+      if (hasEmpty || (hasStart && hasEnd)) return "#7c3aed";
+      if (hasStart) return "#15803d";
+      if (hasEnd) return "#b91c1c";
+      return "#64748b";
+    }
+
+    function regionEventShortLabel(events) {
+      const starts = events.filter(event => event.type === "start").map(event => event.id);
+      const ends = events.filter(event => event.type === "end").map(event => event.id);
+      const empties = events.filter(event => event.type === "empty").map(event => event.id);
+      const parts = [];
+      if (starts.length) parts.push(`S ${starts.slice(0, 3).join(",")}${starts.length > 3 ? "+" : ""}`);
+      if (ends.length) parts.push(`E ${ends.slice(0, 3).join(",")}${ends.length > 3 ? "+" : ""}`);
+      if (empties.length) parts.push(`SE ${empties.slice(0, 2).join(",")}${empties.length > 2 ? "+" : ""}`);
+      return parts.join(" ");
+    }
+
+    function drawMxuUtilization(layout) {
+      if (!state.data?.mxuUtil) return;
+      const { left, width, mxuTop, mxuHeight, startCycle, endCycle } = layout;
+      const plotTop = mxuTop + 6;
+      const plotHeight = Math.max(12, mxuHeight - 17);
+      const targetPixelWidth = state.cycleWidth < 1 ? 2 : 1;
+      const cycleStep = Math.max(1, Math.ceil(targetPixelWidth / Math.max(0.0001, state.cycleWidth)));
+      const points = [];
+
+      for (let cycle = startCycle; cycle <= endCycle; cycle += cycleStep) {
+        const aggregate = aggregateMxuRows(cycle, Math.min(endCycle, cycle + cycleStep - 1));
+        if (!aggregate) continue;
+        const x = left + (cycle - state.offsetCycle) * state.cycleWidth;
+        const w = Math.max(1, cycleStep * state.cycleWidth - (state.cycleWidth > 3 ? 1 : 0));
+        if (x > width || x + w < left) continue;
+        const ratio = aggregate.ratio;
+        const barHeight = Math.max(ratio > 0 ? 1 : 0, ratio * plotHeight);
+        ctx.fillStyle = mxuUtilColor(ratio);
+        ctx.globalAlpha = ratio > 0 ? 0.9 : 0.18;
+        ctx.fillRect(x, plotTop + plotHeight - barHeight, w, barHeight || 1);
+        ctx.globalAlpha = 1;
+        points.push({
+          x: x + w / 2,
+          y: plotTop + plotHeight - ratio * plotHeight
+        });
+      }
+
+      if (points.length > 1) {
+        ctx.save();
+        ctx.strokeStyle = "#0f172a";
+        ctx.globalAlpha = 0.55;
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (const point of points.slice(1)) {
+          ctx.lineTo(point.x, point.y);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      const hovered = state.hoveredMxuCycle;
+      if (hovered !== null && hovered >= startCycle && hovered <= endCycle) {
+        drawCycleMarker(hovered, layout, "#111827", 1.5);
+      }
+      if (state.selectedId !== null) {
+        const selected = state.data.instructionMap.get(state.selectedId);
+        if (selected && selected.cycle >= startCycle && selected.cycle <= endCycle) {
+          drawCycleMarker(selected.cycle, layout, "#f6c343", 2);
+        }
+      }
+
+      ctx.fillStyle = "#475569";
+      ctx.font = "11px Inter, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      const label = `avg ${formatPercent(state.data.mxuUtil.average)}  ${state.data.mxuUtil.source}`;
+      ctx.fillText(label, left + 8, mxuTop + 7, Math.max(40, width - left - 16));
+    }
+
+    function aggregateMxuRows(startCycle, endCycle) {
+      if (!state.data?.mxuUtil) return null;
+      let count = 0;
+      let ratioSum = 0;
+      let busySum = 0;
+      let capacity = state.data.mxuUtil.capacity || 1;
+      for (let cycle = startCycle; cycle <= endCycle; cycle += 1) {
+        const row = state.data.mxuUtil.rowMap.get(cycle);
+        if (!row) continue;
+        count += 1;
+        ratioSum += row.ratio;
+        busySum += row.busy;
+        capacity = Math.max(capacity, row.capacity);
+      }
+      if (!count) return null;
+      return {
+        cycle: startCycle,
+        ratio: ratioSum / count,
+        busy: busySum / count,
+        capacity
+      };
+    }
+
+    function drawVmemUtilization(layout) {
+      if (!state.data?.vmemAlloc || !layout.vmemHeight) return;
+      const { left, width, vmemTop, vmemHeight, startCycle, endCycle } = layout;
+      const plotTop = vmemTop + 6;
+      const plotHeight = Math.max(12, vmemHeight - 17);
+      const targetPixelWidth = state.cycleWidth < 1 ? 2 : 1;
+      const cycleStep = Math.max(1, Math.ceil(targetPixelWidth / Math.max(0.0001, state.cycleWidth)));
+      const points = [];
+
+      for (let cycle = startCycle; cycle <= endCycle; cycle += cycleStep) {
+        const aggregate = aggregateVmemRows(cycle, Math.min(endCycle, cycle + cycleStep - 1));
+        if (!aggregate) continue;
+        const x = left + (cycle - state.offsetCycle) * state.cycleWidth;
+        const w = Math.max(1, cycleStep * state.cycleWidth - (state.cycleWidth > 3 ? 1 : 0));
+        if (x > width || x + w < left) continue;
+        const capacity = Math.max(1, aggregate.capacityBytes);
+        const totalRatio = Math.max(0, Math.min(1, aggregate.totalBytes / capacity));
+        const totalHeight = totalRatio > 0 ? Math.max(1, totalRatio * plotHeight) : 0;
+        let otherHeight = 0;
+        let spillHeight = 0;
+        if (aggregate.totalBytes > 0) {
+          const spillShare = aggregate.spillBytes / aggregate.totalBytes;
+          spillHeight = aggregate.spillBytes > 0 ? totalHeight * spillShare : 0;
+          otherHeight = totalHeight - spillHeight;
+          if (aggregate.otherBytes > 0 && aggregate.spillBytes > 0 && totalHeight >= 2) {
+            spillHeight = Math.max(1, spillHeight);
+            otherHeight = Math.max(1, totalHeight - spillHeight);
+          } else if (aggregate.spillBytes > 0 && aggregate.otherBytes <= 0) {
+            spillHeight = totalHeight;
+            otherHeight = 0;
+          } else if (aggregate.otherBytes > 0 && aggregate.spillBytes <= 0) {
+            otherHeight = totalHeight;
+            spillHeight = 0;
+          }
+        }
+        const baseY = plotTop + plotHeight;
+        if (totalHeight > 0) {
+          ctx.fillStyle = vmemColors.other;
+          ctx.globalAlpha = 0.82;
+          ctx.fillRect(x, baseY - otherHeight, w, otherHeight);
+          if (spillHeight > 0) {
+            ctx.fillStyle = vmemColors.spill;
+            ctx.globalAlpha = 0.9;
+            ctx.fillRect(x, baseY - totalHeight, w, spillHeight);
+          }
+          ctx.globalAlpha = 1;
+        } else {
+          ctx.fillStyle = vmemColors.empty;
+          ctx.globalAlpha = 0.18;
+          ctx.fillRect(x, baseY - 1, w, 1);
+          ctx.globalAlpha = 1;
+        }
+        points.push({
+          x: x + w / 2,
+          y: plotTop + plotHeight - aggregate.ratio * plotHeight
+        });
+      }
+
+      if (points.length > 1) {
+        ctx.save();
+        ctx.strokeStyle = "#14532d";
+        ctx.globalAlpha = 0.58;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (const point of points.slice(1)) {
+          ctx.lineTo(point.x, point.y);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      const hovered = state.hoveredVmemCycle;
+      if (hovered !== null && hovered >= startCycle && hovered <= endCycle) {
+        drawCycleMarker(hovered, layout, "#111827", 1.5);
+      }
+
+      ctx.fillStyle = "#475569";
+      ctx.font = "11px Inter, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      const label = `avg ${formatMegabytes(state.data.vmemAlloc.averageBytes)}  peak ${formatMegabytes(state.data.vmemAlloc.peakBytes)}  ${state.data.vmemAlloc.source}`;
+      ctx.fillText(label, left + 8, vmemTop + 7, Math.max(40, width - left - 16));
+    }
+
+    function aggregateVmemRows(startCycle, endCycle) {
+      if (!state.data?.vmemAlloc) return null;
+      let count = 0;
+      let otherBytesSum = 0;
+      let spillBytesSum = 0;
+      let otherCountSum = 0;
+      let spillCountSum = 0;
+      let capacityBytes = state.data.vmemAlloc.capacityBytes || 1;
+      for (let cycle = startCycle; cycle <= endCycle; cycle += 1) {
+        const row = state.data.vmemAlloc.rowMap.get(cycle);
+        if (!row) continue;
+        count += 1;
+        otherBytesSum += row.otherBytes;
+        spillBytesSum += row.spillBytes;
+        otherCountSum += row.otherCount;
+        spillCountSum += row.spillCount;
+        capacityBytes = Math.max(capacityBytes, row.capacityBytes);
+      }
+      if (!count) return null;
+      return makeVmemAllocationRow(
+        startCycle,
+        otherBytesSum / count,
+        spillBytesSum / count,
+        otherCountSum / count,
+        spillCountSum / count,
+        capacityBytes
+      );
+    }
+
+    function mxuUtilColor(ratio) {
+      if (ratio >= 0.9) return "#b91c1c";
+      if (ratio >= 0.6) return "#ea580c";
+      if (ratio >= 0.25) return "#f59e0b";
+      if (ratio > 0) return "#84cc16";
+      return "#cbd5e1";
+    }
+
+    function drawCycleMarker(cycle, layout, color, lineWidth) {
+      const { left, height, mxuTop } = layout;
+      const x = left + (cycle - state.offsetCycle) * state.cycleWidth + state.cycleWidth / 2;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.beginPath();
+      ctx.moveTo(x, mxuTop);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function buildInstructionFocus() {
+      const ids = new Set();
+      if (state.selectedId !== null) {
+        ids.add(state.selectedId);
+        for (const dep of state.selectedDeps) {
+          if (!state.depFilters[dep.type]) continue;
+          ids.add(dep.related);
+          if (dep.edgeSource !== undefined) ids.add(dep.edgeSource);
+          if (dep.edgeTarget !== undefined) ids.add(dep.edgeTarget);
+        }
+      }
+      for (const id of state.variableSearchMatchIds) ids.add(id);
+      for (const id of state.instructionSearchMatchIds) ids.add(id);
+      return {
+        ids,
+        active: ids.size > 0
+      };
+    }
+
+    function drawInstructions(layout) {
+      if (state.cycleWidth < 1) {
+        drawInstructionOverview(layout);
+        return;
+      }
+      const { left, top, rowHeight, blockHeight, startCycle, endCycle, maxRows } = layout;
+      const selectedSet = new Set(state.selectedDeps.map(dep => dep.related));
+      const variableSearchSet = state.variableSearchMatchIds;
+      const instructionSearchSet = state.instructionSearchMatchIds;
+      const focus = buildInstructionFocus();
+      for (let cycleValue = startCycle; cycleValue <= endCycle; cycleValue += 1) {
+        const cycle = state.data.cycleMap.get(cycleValue);
+        if (!cycle) continue;
+        const x = left + (cycleValue - state.offsetCycle) * state.cycleWidth;
+        const blockWidth = Math.max(1, state.cycleWidth - 2);
+        for (const instruction of cycle.instructions) {
+          if (instruction.slot >= maxRows) continue;
+          const y = top + instruction.slot * rowHeight + 3;
+          const rect = { x, y, w: blockWidth, h: blockHeight, instruction };
+          state.renderedRects.set(instruction.id, rect);
+          drawInstructionBlock(rect, {
+            selected: instruction.id === state.selectedId,
+            dep: selectedSet.has(instruction.id),
+            variableSearch: variableSearchSet.has(instruction.id),
+            instructionSearch: instructionSearchSet.has(instruction.id),
+            dim: focus.active && !focus.ids.has(instruction.id),
+            hovered: instruction.id === state.hoveredId
+          });
+        }
+      }
+    }
+
+    function drawInstructionOverview(layout) {
+      const { left, width, top, rowHeight, blockHeight, startCycle, endCycle, maxRows } = layout;
+      const binWidth = 2;
+      const plotWidth = Math.max(1, width - left - 12);
+      const binCount = Math.ceil(plotWidth / binWidth);
+      const focus = buildInstructionFocus();
+      for (let bin = 0; bin < binCount; bin += 1) {
+        const x = left + bin * binWidth;
+        const binStart = Math.max(startCycle, Math.floor(state.offsetCycle + (x - left) / state.cycleWidth));
+        const binEnd = Math.min(endCycle, Math.floor(state.offsetCycle + (x + binWidth - left) / state.cycleWidth));
+        if (binEnd < binStart) continue;
+        const rowBuckets = Array.from({ length: maxRows }, () => new Map());
+        let maxCount = 1;
+        for (let cycleValue = binStart; cycleValue <= binEnd; cycleValue += 1) {
+          const cycle = state.data.cycleMap.get(cycleValue);
+          if (!cycle) continue;
+          for (const instruction of cycle.instructions) {
+            if (instruction.slot >= maxRows) continue;
+            const key = overviewFocusKey(instruction, focus);
+            const bucket = rowBuckets[instruction.slot];
+            const nextCount = (bucket.get(key) || 0) + 1;
+            bucket.set(key, nextCount);
+            maxCount = Math.max(maxCount, nextCount);
+          }
+        }
+        for (let row = 0; row < maxRows; row += 1) {
+          const bucket = rowBuckets[row];
+          if (!bucket.size) continue;
+          const [key, count] = dominantBucket(bucket);
+          const y = top + row * rowHeight + 3;
+          const alpha = key === "DIM"
+            ? 0.12
+            : Math.min(0.95, 0.24 + 0.71 * Math.min(1, count / Math.max(1, maxCount)));
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = colorForOverviewKey(key);
+          ctx.fillRect(x, y, Math.max(1, binWidth - 0.5), blockHeight);
+          ctx.restore();
+        }
+      }
+
+      ctx.fillStyle = "#475569";
+      ctx.font = "11px Inter, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      const cyclesPerPixel = 1 / Math.max(0.0001, state.cycleWidth);
+      ctx.fillText(`overview: ${formatNumber(cyclesPerPixel)} cycles/px`, left + 8, top + 7);
+    }
+
+    function overviewColorKey(instruction) {
+      return instruction.spillFill || instruction.hardware || "OTHER";
+    }
+
+    function overviewFocusKey(instruction, focus) {
+      if (focus.active && !focus.ids.has(instruction.id)) return "DIM";
+      if (instruction.id === state.selectedId) return "SELECTED";
+      if (state.variableSearchMatchIds.has(instruction.id)) return "VARIABLE_SEARCH";
+      if (state.instructionSearchMatchIds.has(instruction.id)) return "INSTRUCTION_SEARCH";
+      if (focus.active && focus.ids.has(instruction.id)) return "CHAIN";
+      return overviewColorKey(instruction);
+    }
+
+    function dominantBucket(bucket) {
+      for (const key of ["SELECTED", "VARIABLE_SEARCH", "INSTRUCTION_SEARCH", "CHAIN"]) {
+        if (bucket.has(key)) return [key, bucket.get(key)];
+      }
+      let bestKey = "OTHER";
+      let bestCount = -1;
+      for (const [key, count] of bucket) {
+        if (count > bestCount) {
+          bestKey = key;
+          bestCount = count;
+        }
+      }
+      return [bestKey, bestCount];
+    }
+
+    function colorForOverviewKey(key) {
+      if (key === "SELECTED") return "#f6c343";
+      if (key === "VARIABLE_SEARCH") return "#be123c";
+      if (key === "INSTRUCTION_SEARCH") return "#7c3aed";
+      if (key === "CHAIN") return "#0f766e";
+      if (key === "DIM") return "#cbd5e1";
+      return spillFillColors[key] || hardwareColors[key] || hardwareColors.OTHER;
+    }
+
+    function drawInstructionBlock(rect, flags) {
+      const { x, y, w, h, instruction } = rect;
+      ctx.save();
+      if (flags.dim) ctx.globalAlpha = 0.18;
+      ctx.fillStyle = instructionColor(instruction);
+      ctx.fillRect(x, y, w, h);
+      if (w > 4) {
+        ctx.strokeStyle = "rgba(15, 23, 42, 0.22)";
+        ctx.strokeRect(x + 0.5, y + 0.5, Math.max(0, w - 1), Math.max(0, h - 1));
+      }
+      if (w >= 34) {
+        ctx.beginPath();
+        ctx.rect(x + 2, y + 1, w - 4, h - 2);
+        ctx.clip();
+        ctx.fillStyle = readableTextColor(instruction);
+        ctx.font = w >= 112 ? "11px Inter, sans-serif" : "10px Inter, sans-serif";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        const hardwareLabel = instruction.spillFill ? `${instruction.spillFill} ${instruction.hardware}` : instruction.hardware;
+        const label = w >= 112 ? `${hardwareLabel}  ${instruction.short}` : hardwareLabel;
+        ctx.fillText(label, x + 5, y + h / 2, Math.max(0, w - 8));
+      }
+      ctx.restore();
+
+      if (flags.dep) {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#0f766e";
+        ctx.strokeRect(x - 2, y - 2, w + 4, h + 4);
+      }
+      if (flags.variableSearch) {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#be123c";
+        ctx.strokeRect(x - 2.5, y - 2.5, w + 5, h + 5);
+      }
+      if (flags.instructionSearch) {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#7c3aed";
+        ctx.strokeRect(x - 4, y - 4, w + 8, h + 8);
+      }
+      if (flags.selected) {
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#f6c343";
+        ctx.strokeRect(x - 3, y - 3, w + 6, h + 6);
+      } else if (flags.hovered) {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#111827";
+        ctx.strokeRect(x - 1, y - 1, w + 2, h + 2);
+      }
+    }
+
+    function instructionColor(instruction) {
+      return spillFillColors[instruction.spillFill] || hardwareColors[instruction.hardware] || hardwareColors.OTHER;
+    }
+
+    function readableTextColor(instruction) {
+      if (instruction.spillFill) return "#ffffff";
+      const hardware = instruction.hardware;
+      return ["VALU", "XLU", "MXU", "DMA", "CONTROL", "SALU", "SMEM"].includes(hardware) ? "#ffffff" : "#111827";
+    }
+
+    function drawDependencyArrows(layout) {
+      if (state.selectedId === null || !state.selectedDeps.length) return;
+      const depsToDraw = state.selectedDeps.filter(dep => state.depFilters[dep.type]);
+      for (const dep of depsToDraw) {
+        const source = state.renderedRects.get(dep.edgeSource);
+        const target = state.renderedRects.get(dep.edgeTarget);
+        if (!source || !target) continue;
+        drawArrow(source, target, dep);
+      }
+    }
+
+    function drawArrow(source, target, dep) {
+      const startX = source.x + source.w;
+      const startY = source.y + source.h / 2;
+      const endX = target.x;
+      const endY = target.y + target.h / 2;
+      const color = depColors[dep.type] || "#0f766e";
+      const controlX = startX + (endX - startX) * 0.5;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = dep.confidence === "possible" ? 1.5 : 2.4;
+      if (dep.confidence === "possible") ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.quadraticCurveTo(controlX, startY - 22, endX, endY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      const angle = Math.atan2(endY - (startY - 22), endX - controlX);
+      drawArrowHead(endX, endY, angle, color);
+      ctx.restore();
+    }
+
+    function drawArrowHead(x, y, angle, color) {
+      const size = 8;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - size * Math.cos(angle - Math.PI / 6), y - size * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(x - size * Math.cos(angle + Math.PI / 6), y - size * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawViewportStats(layout) {
+      if (!state.data) return;
+      const visible = Math.max(0, layout.endCycle - layout.startCycle + 1);
+      dom.visibleMetric.textContent = `${visible.toLocaleString()} cycles`;
+    }
+
+    function onCanvasMouseMove(event) {
+      rememberCanvasPoint(event);
+      if (!state.data || state.dragging) return;
+      const hit = hitTest(event);
+      const regionHit = hit ? null : hitRegion(event);
+      const mxuHit = hit || regionHit ? null : hitMxuUtil(event);
+      const vmemHit = hit || regionHit || mxuHit ? null : hitVmemUtil(event);
+      const nextId = hit ? hit.id : null;
+      const nextMxuCycle = mxuHit ? mxuHit.cycle : null;
+      const nextVmemCycle = vmemHit ? vmemHit.cycle : null;
+      const nextRegionCycle = regionHit ? regionHit.cycle : null;
+      if (state.hoveredId !== nextId || state.hoveredMxuCycle !== nextMxuCycle || state.hoveredVmemCycle !== nextVmemCycle || state.hoveredRegionCycle !== nextRegionCycle) {
+        state.hoveredId = nextId;
+        state.hoveredMxuCycle = nextMxuCycle;
+        state.hoveredVmemCycle = nextVmemCycle;
+        state.hoveredRegionCycle = nextRegionCycle;
+        render();
+      }
+      if (hit) {
+        showInstructionTooltip(event, hit);
+      } else if (regionHit) {
+        showRegionTooltip(event, regionHit);
+      } else if (mxuHit) {
+        showMxuTooltip(event, mxuHit);
+      } else if (vmemHit) {
+        showVmemTooltip(event, vmemHit);
+      } else {
+        hideTooltip();
+      }
+    }
+
+    function onCanvasClick(event) {
+      if (!state.data) return;
+      const hit = hitTest(event);
+      if (!hit) return;
+      if (hit.id === state.selectedId) {
+        clearSelection();
+        return;
+      }
+      selectInstruction(hit.id);
+    }
+
+    function hitTest(event) {
+      const { x, y } = canvasPoint(event);
+      for (const rendered of state.renderedRects.values()) {
+        if (x >= rendered.x && x <= rendered.x + rendered.w && y >= rendered.y && y <= rendered.y + rendered.h) {
+          return rendered.instruction;
+        }
+      }
+      return null;
+    }
+
+    function hitRegion(event) {
+      const regionData = state.data?.regionData;
+      if (!regionData?.events.length) return null;
+      const { x, y } = canvasPoint(event);
+      const layout = getLayout(dom.canvas.clientWidth, dom.canvas.clientHeight);
+      if (!layout.regionHeight || x < layout.left || y < layout.regionTop || y > layout.regionTop + layout.regionHeight) return null;
+      const cycle = Math.floor(state.offsetCycle + (x - layout.left) / state.cycleWidth);
+      if (cycle < state.data.minCycle || cycle > state.data.maxCycle) return null;
+      const tolerance = Math.max(0, Math.ceil(5 / Math.max(0.0001, state.cycleWidth)));
+      const nearest = nearestRegionEventCycle(cycle, tolerance);
+      const eventCycle = nearest === null ? cycle : nearest;
+      return {
+        cycle: eventCycle,
+        cursorCycle: cycle,
+        events: regionData.eventsByCycle.get(eventCycle) || [],
+        active: activeRegionsAtCycle(cycle).slice(0, 8)
+      };
+    }
+
+    function nearestRegionEventCycle(cycle, tolerance) {
+      const events = state.data?.regionData?.events || [];
+      let bestCycle = null;
+      let bestDistance = Number.POSITIVE_INFINITY;
+      for (const event of events) {
+        const distance = Math.abs(event.cycle - cycle);
+        if (distance <= tolerance && distance < bestDistance) {
+          bestDistance = distance;
+          bestCycle = event.cycle;
+        }
+      }
+      return bestCycle;
+    }
+
+    function activeRegionsAtCycle(cycle) {
+      const spans = state.data?.regionData?.spans || [];
+      return spans
+        .filter(span => span.start <= cycle && span.end >= cycle)
+        .sort((a, b) => a.depth - b.depth || a.id - b.id);
+    }
+
+    function hitMxuUtil(event) {
+      if (!state.data?.mxuUtil) return null;
+      const { x, y } = canvasPoint(event);
+      const layout = getLayout(dom.canvas.clientWidth, dom.canvas.clientHeight);
+      if (x < layout.left || y < layout.mxuTop || y > layout.mxuTop + layout.mxuHeight) return null;
+      const cycle = Math.floor(state.offsetCycle + (x - layout.left) / state.cycleWidth);
+      if (cycle < state.data.minCycle || cycle > state.data.maxCycle) return null;
+      return state.data.mxuUtil.rowMap.get(cycle) || makeMxuRow(cycle, 0, state.data.mxuUtil.capacity);
+    }
+
+    function hitVmemUtil(event) {
+      if (!state.data?.vmemAlloc) return null;
+      const { x, y } = canvasPoint(event);
+      const layout = getLayout(dom.canvas.clientWidth, dom.canvas.clientHeight);
+      if (!layout.vmemHeight || x < layout.left || y < layout.vmemTop || y > layout.vmemTop + layout.vmemHeight) return null;
+      const cycle = Math.floor(state.offsetCycle + (x - layout.left) / state.cycleWidth);
+      if (cycle < state.data.minCycle || cycle > state.data.maxCycle) return null;
+      return state.data.vmemAlloc.rowMap.get(cycle) || makeVmemAllocationRow(cycle, 0, 0, 0, 0, state.data.vmemAlloc.capacityBytes);
+    }
+
+    function canvasPoint(event) {
+      const rect = dom.canvas.getBoundingClientRect();
+      return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      };
+    }
+
+    function showInstructionTooltip(event, instruction) {
+      dom.tooltip.innerHTML = "";
+      const title = document.createElement("div");
+      title.className = "tooltip-title";
+      title.textContent = `cycle ${formatCycle(instruction.cycle)}  slot ${instruction.slot}  ${formatInstructionKind(instruction)}`;
+      const code = document.createElement("div");
+      code.className = "tooltip-code";
+      code.textContent = instruction.display;
+      dom.tooltip.append(title, code);
+      dom.tooltip.style.display = "block";
+      const x = Math.min(window.innerWidth - 640, event.clientX + 14);
+      const y = Math.min(window.innerHeight - 180, event.clientY + 14);
+      dom.tooltip.style.left = `${Math.max(8, x)}px`;
+      dom.tooltip.style.top = `${Math.max(8, y)}px`;
+    }
+
+    function showMxuTooltip(event, row) {
+      dom.tooltip.innerHTML = "";
+      const title = document.createElement("div");
+      title.className = "tooltip-title";
+      title.textContent = `cycle ${formatCycle(row.cycle)}  MXU util ${formatPercent(row.ratio)}`;
+      const code = document.createElement("div");
+      code.className = "tooltip-code";
+      code.textContent = `busy ${formatNumber(row.busy)} / ${formatNumber(row.capacity)}\nsource: ${state.data.mxuUtil.source}`;
+      dom.tooltip.append(title, code);
+      dom.tooltip.style.display = "block";
+      const x = Math.min(window.innerWidth - 640, event.clientX + 14);
+      const y = Math.min(window.innerHeight - 180, event.clientY + 14);
+      dom.tooltip.style.left = `${Math.max(8, x)}px`;
+      dom.tooltip.style.top = `${Math.max(8, y)}px`;
+    }
+
+    function showVmemTooltip(event, row) {
+      dom.tooltip.innerHTML = "";
+      const title = document.createElement("div");
+      title.className = "tooltip-title";
+      title.textContent = `cycle ${formatCycle(row.cycle)}  VMEM ${formatMegabytes(row.totalBytes)}`;
+      const code = document.createElement("div");
+      code.className = "tooltip-code";
+      code.textContent = [
+        `total ${formatMegabytes(row.totalBytes)} / peak ${formatMegabytes(row.capacityBytes)}`,
+        `spill ${formatMegabytes(row.spillBytes)}  other ${formatMegabytes(row.otherBytes)}`,
+        `active allocations ${formatNumber(row.totalCount)}  spill ${formatNumber(row.spillCount)}  other ${formatNumber(row.otherCount)}`,
+        `declared total ${formatMegabytes(state.data.vmemAlloc.totalDeclaredBytes)}`,
+        `source: ${state.data.vmemAlloc.source}`
+      ].join("\n");
+      dom.tooltip.append(title, code);
+      dom.tooltip.style.display = "block";
+      const x = Math.min(window.innerWidth - 640, event.clientX + 14);
+      const y = Math.min(window.innerHeight - 180, event.clientY + 14);
+      dom.tooltip.style.left = `${Math.max(8, x)}px`;
+      dom.tooltip.style.top = `${Math.max(8, y)}px`;
+    }
+
+    function showRegionTooltip(event, hit) {
+      dom.tooltip.innerHTML = "";
+      const title = document.createElement("div");
+      title.className = "tooltip-title";
+      title.textContent = `cycle ${formatCycle(hit.cursorCycle)}  Regions`;
+      const code = document.createElement("div");
+      code.className = "tooltip-code";
+      const lines = [];
+      if (hit.events.length) {
+        lines.push(...hit.events.map(regionEventLabel));
+      } else {
+        lines.push("no region boundary at cursor");
+      }
+      if (hit.active.length) {
+        lines.push(`active: ${hit.active.map(span => `r${span.id}`).join(", ")}`);
+      }
+      code.textContent = lines.join("\n");
+      dom.tooltip.append(title, code);
+      dom.tooltip.style.display = "block";
+      const x = Math.min(window.innerWidth - 640, event.clientX + 14);
+      const y = Math.min(window.innerHeight - 180, event.clientY + 14);
+      dom.tooltip.style.left = `${Math.max(8, x)}px`;
+      dom.tooltip.style.top = `${Math.max(8, y)}px`;
+    }
+
+    function regionEventLabel(event) {
+      if (event.type === "empty") return `start/end empty region ${event.id}`;
+      return `${event.type} region ${event.id}`;
+    }
+
+    function hideTooltip() {
+      dom.tooltip.style.display = "none";
+    }
+
+    function onCanvasWheel(event) {
+      if (!state.data) return;
+      rememberCanvasPoint(event);
+      event.preventDefault();
+      if (event.ctrlKey || event.metaKey) {
+        const rect = dom.canvas.getBoundingClientRect();
+        const cursorX = event.clientX - rect.left;
+        const delta = event.deltaY > 0 ? -5 : 5;
+        zoomAtCanvasX(delta, cursorX);
+      } else {
+        const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+        state.offsetCycle += delta / state.cycleWidth;
+        clampOffset();
+        render();
+      }
+    }
+
+    function onGlobalKeyDown(event) {
+      if (!state.data || isEditableTarget(event.target) || event.altKey || event.ctrlKey || event.metaKey) return;
+      const key = event.key.toLowerCase();
+      if (key !== "w" && key !== "s") return;
+      event.preventDefault();
+      zoomAtCanvasX(key === "w" ? 5 : -5, getKeyboardZoomAnchorX());
+    }
+
+    function getKeyboardZoomAnchorX() {
+      const point = state.lastCanvasPoint;
+      if (point && point.x >= 0 && point.x <= dom.canvas.clientWidth) return point.x;
+      return dom.canvas.clientWidth / 2;
+    }
+
+    function zoomAtCanvasX(delta, cursorX) {
+      if (!state.data) return;
+      const layout = getLayout(dom.canvas.clientWidth, dom.canvas.clientHeight);
+      const anchorX = Math.max(layout.left, Math.min(layout.width - 12, cursorX));
+      const cycleAtCursor = state.offsetCycle + (anchorX - layout.left) / state.cycleWidth;
+      applyZoom(clampZoom(state.zoom + delta));
+      state.offsetCycle = cycleAtCursor - (anchorX - layout.left) / state.cycleWidth;
+      clampOffset();
+      render();
+    }
+
+    function clampZoom(value) {
+      return Math.max(0, Math.min(100, value));
+    }
+
+    function isEditableTarget(target) {
+      if (!target) return false;
+      const tag = target.tagName ? target.tagName.toLowerCase() : "";
+      return target.isContentEditable || ["input", "textarea", "select", "button"].includes(tag);
+    }
+
+    function rememberCanvasPoint(event) {
+      const rect = dom.canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+        state.lastCanvasPoint = { x, y };
+        return true;
+      }
+      state.lastCanvasPoint = null;
+      return false;
+    }
+
+    function selectInstruction(instructionId, options = {}) {
+      if (!state.data || instructionId === null || instructionId === undefined) return;
+      const instruction = state.data.instructionMap.get(instructionId);
+      if (!instruction) return;
+      state.selectedId = instructionId;
+      state.hoveredId = instructionId;
+      if (options.jump) {
+        state.offsetCycle = instruction.cycle;
+        clampOffset();
+      }
+      refreshSelectionDeps();
+      renderSelectionPanel();
+      render();
+    }
+
+    function clearSelection(options = {}) {
+      state.selectedId = null;
+      state.selectedDeps = [];
+      state.hoveredId = null;
+      dom.depMetric.textContent = "0";
+      hideTooltip();
+      renderSelectionPanel();
+      if (options.renderNow !== false) render();
+    }
+
+    function updateVariableSearch(options = {}) {
+      if (!state.data) {
+        clearVariableSearch({ renderNow: false });
+        renderVariableSearchResults();
+        return;
+      }
+      const query = normalizeVariableQuery(dom.variableSearchInput.value);
+      state.variableSearchQuery = query;
+      if (!query) {
+        state.variableSearchMatches = [];
+        state.variableSearchMatchIds = new Set();
+        state.variableSearchVariables = [];
+        renderVariableSearchResults();
+        render();
+        return;
+      }
+
+      const { matches, variables } = findVariableSearchMatches(query);
+      state.variableSearchMatches = matches;
+      state.variableSearchMatchIds = new Set(matches.map(match => match.id));
+      state.variableSearchVariables = variables;
+      renderVariableSearchResults();
+      if (options.jump && matches.length) {
+        selectInstruction(matches[0].id, { jump: true });
+        return;
+      }
+      render();
+    }
+
+    function findVariableSearchMatches(query) {
+      const variableEntries = [];
+      for (const entry of state.data.variableIndex.values()) {
+        const index = entry.key.indexOf(query);
+        if (index >= 0) {
+          variableEntries.push({
+            ...entry,
+            matchIndex: index
+          });
+        }
+      }
+      variableEntries.sort((a, b) => {
+        const exact = Number(a.key !== query) - Number(b.key !== query);
+        if (exact) return exact;
+        const starts = Number(!a.key.startsWith(query)) - Number(!b.key.startsWith(query));
+        if (starts) return starts;
+        return a.matchIndex - b.matchIndex || a.key.localeCompare(b.key);
+      });
+
+      const instructionMatches = new Map();
+      for (const variable of variableEntries) {
+        for (const ref of variable.refs) {
+          if (!instructionMatches.has(ref.id)) {
+            instructionMatches.set(ref.id, {
+              id: ref.id,
+              variables: new Map()
+            });
+          }
+          const match = instructionMatches.get(ref.id);
+          if (!match.variables.has(variable.name)) {
+            match.variables.set(variable.name, new Set());
+          }
+          match.variables.get(variable.name).add(ref.role);
+        }
+      }
+
+      const matches = Array.from(instructionMatches.values())
+        .map(match => ({
+          id: match.id,
+          variables: Array.from(match.variables.entries()).map(([name, roles]) => ({
+            name,
+            roles: Array.from(roles).sort()
+          }))
+        }))
+        .sort((a, b) => {
+          const left = state.data.instructionMap.get(a.id);
+          const right = state.data.instructionMap.get(b.id);
+          return (left?.cycle || 0) - (right?.cycle || 0) || (left?.slot || 0) - (right?.slot || 0) || a.id - b.id;
+        });
+
+      return {
+        matches,
+        variables: variableEntries.map(entry => entry.name)
+      };
+    }
+
+    function renderVariableSearchResults() {
+      if (!dom.variableSearchSummary || !dom.variableSearchResults) return;
+      dom.variableSearchResults.innerHTML = "";
+      const query = state.variableSearchQuery;
+      if (!query) {
+        dom.variableSearchSummary.textContent = "Search definitions and uses by partial variable name.";
+        return;
+      }
+      if (!state.variableSearchMatches.length) {
+        dom.variableSearchSummary.textContent = `No variable matches for "${query}".`;
+        return;
+      }
+
+      dom.variableSearchSummary.textContent = `${state.variableSearchMatches.length.toLocaleString()} instructions, ${state.variableSearchVariables.length.toLocaleString()} variable names matched.`;
+      for (const match of state.variableSearchMatches.slice(0, 120)) {
+        const instruction = state.data.instructionMap.get(match.id);
+        if (!instruction) continue;
+        const item = document.createElement("div");
+        item.className = "dep-item";
+        item.style.borderLeftColor = "#be123c";
+        item.addEventListener("click", () => selectInstruction(match.id, { jump: true }));
+
+        const meta = document.createElement("div");
+        meta.className = "dep-meta";
+        const left = document.createElement("span");
+        left.textContent = `cycle ${formatCycle(instruction.cycle)} ${formatInstructionKind(instruction)}`;
+        const right = document.createElement("span");
+        right.textContent = `slot ${instruction.slot}`;
+        meta.append(left, right);
+
+        const code = document.createElement("div");
+        code.className = "dep-code";
+        code.title = instruction.display;
+        const vars = document.createElement("span");
+        vars.className = "search-var";
+        vars.textContent = match.variables.map(formatVariableMatch).join(", ");
+        code.append(vars, document.createTextNode(`  ${instruction.short}`));
+        item.append(meta, code);
+        dom.variableSearchResults.append(item);
+      }
+
+      if (state.variableSearchMatches.length > 120) {
+        const more = document.createElement("div");
+        more.className = "hint";
+        more.textContent = `${state.variableSearchMatches.length - 120} more matching instructions hidden from the result list. They are still highlighted on the timeline.`;
+        dom.variableSearchResults.append(more);
+      }
+    }
+
+    function formatVariableMatch(match) {
+      const role = match.roles.includes("def") && match.roles.includes("use")
+        ? "def/use"
+        : match.roles.includes("def") ? "def" : "use";
+      return `${match.name}:${role}`;
+    }
+
+    function clearVariableSearch(options = {}) {
+      state.variableSearchQuery = "";
+      state.variableSearchMatches = [];
+      state.variableSearchMatchIds = new Set();
+      state.variableSearchVariables = [];
+      if (dom.variableSearchInput) dom.variableSearchInput.value = "";
+      renderVariableSearchResults();
+      if (options.renderNow !== false) render();
+    }
+
+    function updateInstructionSearch(options = {}) {
+      if (!state.data) {
+        clearInstructionSearch({ renderNow: false });
+        renderInstructionSearchResults();
+        return;
+      }
+      const query = normalizeInstructionQuery(dom.instructionSearchInput.value);
+      state.instructionSearchQuery = query;
+      if (!query) {
+        state.instructionSearchMatches = [];
+        state.instructionSearchMatchIds = new Set();
+        renderInstructionSearchResults();
+        render();
+        return;
+      }
+
+      const matches = findInstructionSearchMatches(query);
+      state.instructionSearchMatches = matches;
+      state.instructionSearchMatchIds = new Set(matches.map(match => match.id));
+      renderInstructionSearchResults();
+      if (options.jump && matches.length) {
+        selectInstruction(matches[0].id, { jump: true });
+        return;
+      }
+      render();
+    }
+
+    function findInstructionSearchMatches(query) {
+      const terms = query.split(/\s+/).filter(Boolean);
+      const matches = [];
+      for (const instruction of state.data.instructions) {
+        const text = instructionSearchText(instruction);
+        if (!terms.every(term => text.includes(term))) continue;
+        const indexes = terms.map(term => text.indexOf(term)).filter(index => index >= 0);
+        matches.push({
+          id: instruction.id,
+          score: Math.min(...indexes),
+          text
+        });
+      }
+      matches.sort((a, b) => {
+        const exact = Number(a.text !== query) - Number(b.text !== query);
+        if (exact) return exact;
+        if (a.score !== b.score) return a.score - b.score;
+        const left = state.data.instructionMap.get(a.id);
+        const right = state.data.instructionMap.get(b.id);
+        return (left?.cycle || 0) - (right?.cycle || 0) || (left?.slot || 0) - (right?.slot || 0) || a.id - b.id;
+      });
+      return matches;
+    }
+
+    function instructionSearchText(instruction) {
+      return normalizeInstructionQuery([
+        instruction.hardware,
+        instruction.spillFill,
+        instruction.opcode,
+        instruction.short,
+        instruction.display,
+        instruction.code,
+        instruction.raw
+      ].filter(Boolean).join(" "));
+    }
+
+    function renderInstructionSearchResults() {
+      if (!dom.instructionSearchSummary || !dom.instructionSearchResults) return;
+      dom.instructionSearchResults.innerHTML = "";
+      const query = state.instructionSearchQuery;
+      if (!query) {
+        dom.instructionSearchSummary.textContent = "Search instruction text by partial opcode, operand, or comment text.";
+        return;
+      }
+      if (!state.instructionSearchMatches.length) {
+        dom.instructionSearchSummary.textContent = `No instruction matches for "${query}".`;
+        return;
+      }
+
+      dom.instructionSearchSummary.textContent = `${state.instructionSearchMatches.length.toLocaleString()} matching instructions.`;
+      for (const match of state.instructionSearchMatches.slice(0, 120)) {
+        const instruction = state.data.instructionMap.get(match.id);
+        if (!instruction) continue;
+        const item = document.createElement("div");
+        item.className = "dep-item";
+        item.style.borderLeftColor = "#7c3aed";
+        item.addEventListener("click", () => selectInstruction(match.id, { jump: true }));
+
+        const meta = document.createElement("div");
+        meta.className = "dep-meta";
+        const left = document.createElement("span");
+        left.textContent = `cycle ${formatCycle(instruction.cycle)} ${formatInstructionKind(instruction)}`;
+        const right = document.createElement("span");
+        right.textContent = `slot ${instruction.slot}`;
+        meta.append(left, right);
+
+        const code = document.createElement("div");
+        code.className = "dep-code";
+        code.title = instruction.display;
+        const label = document.createElement("span");
+        label.className = "search-instruction";
+        label.textContent = "match";
+        code.append(label, document.createTextNode(`  ${instruction.short}`));
+        item.append(meta, code);
+        dom.instructionSearchResults.append(item);
+      }
+
+      if (state.instructionSearchMatches.length > 120) {
+        const more = document.createElement("div");
+        more.className = "hint";
+        more.textContent = `${state.instructionSearchMatches.length - 120} more matching instructions hidden from the result list. They are still highlighted on the timeline.`;
+        dom.instructionSearchResults.append(more);
+      }
+    }
+
+    function clearInstructionSearch(options = {}) {
+      state.instructionSearchQuery = "";
+      state.instructionSearchMatches = [];
+      state.instructionSearchMatchIds = new Set();
+      if (dom.instructionSearchInput) dom.instructionSearchInput.value = "";
+      renderInstructionSearchResults();
+      if (options.renderNow !== false) render();
+    }
+
+    function refreshSelectionDeps() {
+      if (state.selectedId === null || !state.data) {
+        state.selectedDeps = [];
+        dom.depMetric.textContent = "0";
+        return;
+      }
+      state.selectedDeps = collectRelations(state.selectedId, state.showTransitive, state.depDirection);
+      dom.depMetric.textContent = `${state.selectedDeps.length.toLocaleString()}`;
+    }
+
+    function collectRelations(instructionId, transitive, direction) {
+      const result = [];
+      const seen = new Set();
+      const queue = [{ id: instructionId, depth: 0 }];
+      const queued = new Set([instructionId]);
+      const maxItems = transitive ? 50000 : 100;
+      while (queue.length && result.length < maxItems) {
+        const item = queue.shift();
+        const instruction = state.data.instructionMap.get(item.id);
+        if (!instruction) continue;
+        const edges = direction === "users" ? instruction.dependents : instruction.deps;
+        for (const dep of edges) {
+          if (!state.depFilters[dep.type]) continue;
+          const related = direction === "users" ? dep.target : dep.source;
+          const key = `${item.id}:${related}:${dep.type}:${dep.reason}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const enriched = {
+            ...dep,
+            related,
+            edgeSource: dep.source,
+            edgeTarget: direction === "users" ? dep.target : item.id,
+            depth: item.depth + 1
+          };
+          result.push(enriched);
+          if (transitive && !queued.has(related)) {
+            queued.add(related);
+            queue.push({ id: related, depth: item.depth + 1 });
+          }
+        }
+      }
+      return result;
+    }
+
+    function renderSelectionPanel() {
+      dom.selectionPanel.innerHTML = "";
+      if (!state.data || state.selectedId === null) {
+        const empty = document.createElement("div");
+        empty.className = "selection-empty";
+        empty.textContent = "Click an instruction block to highlight dependencies. Use W/S or Ctrl+wheel to zoom.";
+        dom.selectionPanel.append(empty);
+        return;
+      }
+      const instruction = state.data.instructionMap.get(state.selectedId);
+      const title = document.createElement("div");
+      title.className = "selected-title";
+      title.textContent = `${formatInstructionKind(instruction)} at cycle ${formatCycle(instruction.cycle)}, slot ${instruction.slot}`;
+
+      const code = document.createElement("div");
+      code.className = "selected-code";
+      code.textContent = instruction.display;
+
+      const modeRow = document.createElement("div");
+      modeRow.className = "dep-mode-row";
+      for (const mode of [
+        { value: "deps", label: "Depends on" },
+        { value: "users", label: "Used by" }
+      ]) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = state.depDirection === mode.value ? "active" : "";
+        button.textContent = mode.label;
+        button.addEventListener("click", () => {
+          if (state.depDirection === mode.value) return;
+          state.depDirection = mode.value;
+          refreshSelectionDeps();
+          renderSelectionPanel();
+          render();
+        });
+        modeRow.append(button);
+      }
+
+      const filterGrid = document.createElement("div");
+      filterGrid.className = "dep-filter-grid";
+      for (const type of Object.keys(depLabels)) {
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = state.depFilters[type];
+        checkbox.addEventListener("change", () => {
+          state.depFilters[type] = checkbox.checked;
+          refreshSelectionDeps();
+          renderSelectionPanel();
+          render();
+        });
+        const dot = document.createElement("span");
+        dot.className = "swatch";
+        dot.style.background = depColors[type];
+        label.append(checkbox, dot, document.createTextNode(depLabels[type]));
+        filterGrid.append(label);
+      }
+
+      const list = document.createElement("div");
+      list.className = "dep-list";
+      const deps = state.selectedDeps.filter(dep => state.depFilters[dep.type]);
+      if (!deps.length) {
+        const empty = document.createElement("div");
+        empty.className = "selection-empty";
+        empty.textContent = state.depDirection === "users"
+          ? "No dependents found for the enabled dependency classes."
+          : "No dependencies found for the enabled dependency classes.";
+        list.append(empty);
+      } else {
+        for (const dep of deps.slice(0, 180)) {
+          const related = state.data.instructionMap.get(dep.related);
+          if (!related) continue;
+          const item = document.createElement("div");
+          item.className = "dep-item";
+          item.style.borderLeftColor = depColors[dep.type] || "#64748b";
+          item.addEventListener("click", () => {
+            jumpToCycle(related.cycle);
+            state.hoveredId = related.id;
+            render();
+          });
+          const meta = document.createElement("div");
+          meta.className = "dep-meta";
+          const left = document.createElement("span");
+          left.textContent = `${depLabels[dep.type]}${dep.depth > 1 ? ` depth ${dep.depth}` : ""}`;
+          const right = document.createElement("span");
+          right.textContent = `cycle ${formatCycle(related.cycle)} ${formatInstructionKind(related)}`;
+          meta.append(left, right);
+          const depCode = document.createElement("div");
+          depCode.className = "dep-code";
+          depCode.title = `${dep.reason}\n${related.display}`;
+          depCode.textContent = `${related.short}  (${dep.confidence}: ${dep.reason})`;
+          item.append(meta, depCode);
+          list.append(item);
+        }
+        if (deps.length > 180) {
+          const more = document.createElement("div");
+          more.className = "hint";
+          more.textContent = `${deps.length - 180} more dependencies hidden in the side list to keep the page responsive.`;
+          list.append(more);
+        }
+      }
+
+      dom.selectionPanel.append(title, code, modeRow, filterGrid, list);
+    }
+
+    function applyZoom(value) {
+      state.zoom = value;
+      const normalized = value / 100;
+      const minCycleWidth = getMinCycleWidth();
+      const maxCycleWidth = 96.5;
+      state.cycleWidth = roundCycleWidth(minCycleWidth + Math.pow(normalized, 2.2) * (maxCycleWidth - minCycleWidth));
+      dom.zoomSlider.value = value;
+      updateZoomLabel();
+    }
+
+    function fitWidth() {
+      if (!state.data) return;
+      state.zoom = 0;
+      applyZoom(0);
+      state.offsetCycle = state.data.minCycle;
+      render();
+    }
+
+    function resetView() {
+      applyZoom(34);
+      state.offsetCycle = state.data ? state.data.minCycle : 0;
+      state.selectedId = null;
+      state.selectedDeps = [];
+      state.hoveredId = null;
+      state.hoveredMxuCycle = null;
+      state.hoveredVmemCycle = null;
+      state.hoveredRegionCycle = null;
+      clearVariableSearch({ renderNow: false });
+      clearInstructionSearch({ renderNow: false });
+      renderSelectionPanel();
+      render();
+    }
+
+    function jumpToCycle(cycle) {
+      if (!state.data || Number.isNaN(cycle)) return;
+      state.offsetCycle = cycle;
+      clampOffset();
+      dom.cycleInput.value = Math.floor(state.offsetCycle);
+      render();
+    }
+
+    function clampOffset() {
+      if (!state.data) return;
+      const width = Math.max(1, dom.canvas.clientWidth - 90);
+      const visibleCycles = width / Math.max(0.0001, state.cycleWidth);
+      const maxOffset = Math.max(state.data.minCycle, state.data.maxCycle - visibleCycles + 1);
+      state.offsetCycle = Math.max(state.data.minCycle, Math.min(maxOffset, state.offsetCycle));
+      dom.cycleInput.value = Math.floor(state.offsetCycle);
+    }
+
+    function chooseCycleLabelStep(cycleWidth) {
+      return niceStep(80 / Math.max(0.0001, cycleWidth));
+    }
+
+    function niceStep(rawStep) {
+      const exponent = Math.floor(Math.log10(Math.max(1, rawStep)));
+      const base = Math.pow(10, exponent);
+      const scaled = rawStep / base;
+      if (scaled <= 1) return base;
+      if (scaled <= 2) return 2 * base;
+      if (scaled <= 5) return 5 * base;
+      return 10 * base;
+    }
+
+    function getMinCycleWidth() {
+      if (!state.data) return 0.25;
+      const width = Math.max(1, dom.canvas.clientWidth - 90);
+      const cycleCount = Math.max(1, state.data.maxCycle - state.data.minCycle + 1);
+      return Math.max(0.001, Math.min(96.5, width / cycleCount));
+    }
+
+    function roundCycleWidth(value) {
+      if (value < 0.01) return Math.round(value * 10000) / 10000;
+      if (value < 0.1) return Math.round(value * 1000) / 1000;
+      if (value < 10) return Math.round(value * 10) / 10;
+      return Math.round(value * 10) / 10;
+    }
+
+    function updateZoomLabel() {
+      if (state.cycleWidth < 1) {
+        const cyclesPerPixel = 1 / Math.max(0.0001, state.cycleWidth);
+        dom.zoomLabel.textContent = `${formatNumber(cyclesPerPixel)} cycles/px`;
+        return;
+      }
+      dom.zoomLabel.textContent = `${state.cycleWidth.toFixed(state.cycleWidth < 10 ? 1 : 0)} px/cycle`;
+    }
+
+    function resetMetrics() {
+      dom.cycleMetric.textContent = "0";
+      dom.instructionMetric.textContent = "0";
+      dom.visibleMetric.textContent = "0";
+      dom.depMetric.textContent = "0";
+      dom.mxuAvgMetric.textContent = "0%";
+      dom.mxuSourceMetric.textContent = "none";
+      dom.mxuSourceMetric.title = "";
+      dom.vmemAvgMetric.textContent = "0 MB";
+      dom.vmemSourceMetric.textContent = "none";
+      dom.vmemSourceMetric.title = "";
+    }
+
+    function refreshMetrics() {
+      if (!state.data) {
+        resetMetrics();
+        return;
+      }
+      const cycleCount = state.data.maxCycle - state.data.minCycle + 1;
+      dom.cycleMetric.textContent = cycleCount.toLocaleString();
+      dom.instructionMetric.textContent = state.data.instructions.length.toLocaleString();
+      dom.depMetric.textContent = "0";
+      dom.mxuAvgMetric.textContent = formatPercent(state.data.mxuUtil?.average || 0);
+      dom.mxuSourceMetric.textContent = state.data.mxuUtil?.sourceKind || "none";
+      dom.mxuSourceMetric.title = state.data.mxuUtil?.source || "";
+      dom.vmemAvgMetric.textContent = formatMegabytes(state.data.vmemAlloc?.averageBytes || 0);
+      dom.vmemSourceMetric.textContent = state.data.vmemAlloc?.sourceKind || "none";
+      dom.vmemSourceMetric.title = state.data.vmemAlloc?.source || "";
+    }
+
+    function setStatus(text) {
+      dom.status.textContent = text;
+    }
+
+    function showProgress(visible, value) {
+      dom.progress.style.display = visible ? "block" : "none";
+      dom.progressBar.style.width = `${Math.max(0, Math.min(1, value)) * 100}%`;
+    }
+
+    function formatBytes(bytes) {
+      if (!Number.isFinite(bytes)) return "0 B";
+      const units = ["B", "KB", "MB", "GB"];
+      let value = bytes;
+      let unit = 0;
+      while (value >= 1024 && unit < units.length - 1) {
+        value /= 1024;
+        unit += 1;
+      }
+      return `${value.toFixed(value >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`;
+    }
+
+    function formatMegabytes(bytes) {
+      if (!Number.isFinite(bytes) || bytes <= 0) return "0 MB";
+      const mb = bytes / (1024 * 1024);
+      if (mb >= 100) return `${mb.toFixed(0)} MB`;
+      if (mb >= 10) return `${mb.toFixed(1)} MB`;
+      if (mb >= 1) return `${mb.toFixed(2)} MB`;
+      return `${mb.toFixed(3)} MB`;
+    }
+
+    function formatCycle(cycle) {
+      return `0x${Math.max(0, Math.floor(cycle)).toString(16)}`;
+    }
+
+    function formatPercent(value) {
+      const percent = Math.max(0, Math.min(1, value || 0)) * 100;
+      return `${percent.toFixed(percent >= 10 ? 0 : 1)}%`;
+    }
+
+    function formatNumber(value) {
+      if (!Number.isFinite(value)) return "0";
+      return Number.isInteger(value) ? value.toLocaleString() : value.toFixed(2);
+    }
+
+    function normalizeVariableQuery(value) {
+      return String(value || "").trim().replace(/^%+/, "").toLowerCase();
+    }
+
+    function normalizeInstructionQuery(value) {
+      return String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
+    }
+
+    function formatInstructionKind(instruction) {
+      return instruction.spillFill ? `${instruction.spillFill} ${instruction.hardware}` : instruction.hardware;
+    }
+
+    function parseNumeric(value) {
+      if (value.startsWith("0x") || value.startsWith("0X")) return parseInt(value, 16);
+      return parseInt(value, 10);
+    }
+
+    function yieldToBrowser() {
+      return new Promise(resolve => setTimeout(resolve, 0));
+    }
+  </script>
+</body>
+</html>
