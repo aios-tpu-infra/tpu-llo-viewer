@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "test": "node tests/viewer.e2e.cjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.1"
+  }
+}
