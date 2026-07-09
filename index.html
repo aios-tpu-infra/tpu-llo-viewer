@@ -79,6 +79,28 @@
       white-space: nowrap;
     }
 
+    .icon-button {
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: var(--panel);
+      color: #344054;
+      font-weight: 700;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .icon-button:hover,
+    .icon-button.active {
+      border-color: #1d4ed8;
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
     .file-actions,
     .toolbar-actions {
       display: flex;
@@ -115,7 +137,13 @@
       display: none;
     }
 
-    .kernel-select {
+    .kernel-picker {
+      position: relative;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .kernel-search {
       min-width: 0;
       width: 100%;
       height: 34px;
@@ -124,6 +152,91 @@
       background: var(--panel);
       color: var(--ink);
       padding: 0 10px;
+    }
+
+    .kernel-search:disabled {
+      color: var(--muted);
+      background: #f8fafc;
+      cursor: not-allowed;
+    }
+
+    .kernel-suggestions {
+      position: absolute;
+      z-index: 20;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      max-height: min(420px, calc(100vh - 84px));
+      overflow-y: auto;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      display: none;
+    }
+
+    .kernel-suggestions.open {
+      display: block;
+    }
+
+    .kernel-suggestion {
+      width: 100%;
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 9px 10px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .kernel-suggestion:last-child {
+      border-bottom: 0;
+    }
+
+    .kernel-suggestion:hover,
+    .kernel-suggestion.active {
+      background: #eef4ff;
+    }
+
+    .kernel-suggestion-text {
+      min-width: 0;
+    }
+
+    .kernel-suggestion-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .kernel-suggestion-meta {
+      min-width: 0;
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .kernel-suggestion-size {
+      color: #344054;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .kernel-suggestion-empty {
+      padding: 10px;
+      color: var(--muted);
+      font-size: 13px;
     }
 
     .status {
@@ -164,14 +277,18 @@
 
     .side::-webkit-scrollbar,
     .dep-list::-webkit-scrollbar,
-    .selected-code::-webkit-scrollbar {
+    .selected-code::-webkit-scrollbar,
+    .code-file-list::-webkit-scrollbar,
+    .code-viewer::-webkit-scrollbar {
       width: 10px;
       height: 10px;
     }
 
     .side::-webkit-scrollbar-thumb,
     .dep-list::-webkit-scrollbar-thumb,
-    .selected-code::-webkit-scrollbar-thumb {
+    .selected-code::-webkit-scrollbar-thumb,
+    .code-file-list::-webkit-scrollbar-thumb,
+    .code-viewer::-webkit-scrollbar-thumb {
       background: #b8c2d0;
       border: 2px solid #ffffff;
       border-radius: 999px;
@@ -179,7 +296,9 @@
 
     .side::-webkit-scrollbar-track,
     .dep-list::-webkit-scrollbar-track,
-    .selected-code::-webkit-scrollbar-track {
+    .selected-code::-webkit-scrollbar-track,
+    .code-file-list::-webkit-scrollbar-track,
+    .code-viewer::-webkit-scrollbar-track {
       background: #eef2f7;
     }
 
@@ -305,7 +424,7 @@
 
     .controlbar {
       display: grid;
-      grid-template-columns: minmax(280px, 1fr) auto auto auto;
+      grid-template-columns: minmax(220px, 1fr) auto auto minmax(150px, auto) auto auto;
       gap: 12px;
       align-items: center;
       padding: 8px 12px;
@@ -358,6 +477,41 @@
 
     .check-row input {
       margin: 0 4px 0 0;
+    }
+
+    .mode-toggle {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .mode-toggle button {
+      height: 32px;
+      border: 0;
+      border-right: 1px solid var(--line);
+      background: #fff;
+      color: #344054;
+      padding: 0 10px;
+      cursor: pointer;
+    }
+
+    .mode-toggle button:last-child {
+      border-right: 0;
+    }
+
+    .mode-toggle button.active {
+      background: #1d4ed8;
+      color: #fff;
+    }
+
+    .cycle-selection-summary {
+      min-width: 150px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
     }
 
     .canvas-wrap {
@@ -414,6 +568,39 @@
       word-break: break-word;
     }
 
+    .selection-context {
+      display: grid;
+      gap: 6px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fbfcfe;
+      color: #344054;
+      font-size: 12px;
+    }
+
+    .selection-context-row {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+    }
+
+    .selection-context-label {
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .selection-context-value {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .selected-code {
       max-height: 132px;
       overflow: auto;
@@ -427,6 +614,72 @@
       line-height: 1.4;
       white-space: pre-wrap;
       word-break: break-word;
+    }
+
+    .selected-inspector {
+      position: absolute;
+      z-index: 12;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      width: min(920px, calc(100% - 32px));
+      max-height: min(260px, 45%);
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: var(--shadow);
+    }
+
+    .selected-inspector.hidden {
+      display: none;
+    }
+
+    .selected-inspector-header {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .selected-inspector-title {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .selected-inspector-close {
+      height: 28px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: #fff;
+      color: #344054;
+      cursor: pointer;
+      padding: 0 10px;
+    }
+
+    .selected-source {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      white-space: normal;
+      color: #475569;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .selected-inspector .selected-code {
+      max-height: none;
+      min-height: 0;
+      overflow: auto;
+      font-size: 12px;
     }
 
     .dep-filter-grid {
@@ -467,6 +720,19 @@
       background: #eff6ff;
       color: #1d4ed8;
       font-weight: 700;
+    }
+
+    .pin-root-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      color: #344054;
+      font-size: 12px;
+    }
+
+    .pin-root-row input {
+      margin: 0;
     }
 
     .dep-list {
@@ -531,6 +797,301 @@
       transition: width 0.12s linear;
     }
 
+    .code-drawer {
+      position: fixed;
+      z-index: 30;
+      top: 56px;
+      bottom: 0;
+      left: 0;
+      width: 520px;
+      min-width: 360px;
+      max-width: min(72vw, 1100px);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      border-right: 1px solid var(--line-strong);
+      background: var(--panel);
+      box-shadow: 18px 0 36px rgba(24, 35, 51, 0.18);
+      transform: translateX(-102%);
+      transition: transform 0.18s ease;
+    }
+
+    .code-drawer.open {
+      transform: translateX(0);
+    }
+
+    .code-drawer-header {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfe;
+    }
+
+    .code-drawer-title {
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .code-drawer-subtitle {
+      min-width: 0;
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .code-drawer-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .code-upload-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .code-drawer-body {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr);
+      padding: 12px;
+      background: #f8fafc;
+    }
+
+    .code-empty-state {
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      gap: 12px;
+      align-content: center;
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--muted);
+      text-align: center;
+      padding: 28px;
+    }
+
+    .code-empty-title {
+      color: #111827;
+      font-weight: 700;
+    }
+
+    .code-empty-text {
+      max-width: 360px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .code-content {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .code-content.hidden,
+    .code-empty-state.hidden {
+      display: none;
+    }
+
+    .code-meta {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .code-file-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #344054;
+      font-weight: 600;
+    }
+
+    .code-file-list {
+      min-width: 0;
+      max-height: 132px;
+      display: grid;
+      gap: 6px;
+      overflow: auto;
+      padding: 2px;
+    }
+
+    .code-file-item {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: #344054;
+      cursor: pointer;
+    }
+
+    .code-file-item.active {
+      border-color: #1d4ed8;
+      background: #eff6ff;
+    }
+
+    .code-file-item-missing {
+      border-color: #f59e0b;
+      background: #fffbeb;
+    }
+
+    .code-file-item-main {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .code-file-item-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .code-file-item-meta {
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .code-file-delete {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: #fff;
+      color: #b91c1c;
+      cursor: pointer;
+    }
+
+    .code-viewer {
+      min-height: 0;
+      margin: 0;
+      overflow: auto;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      background: #0f172a;
+      color: #dbeafe;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .code-line {
+      min-width: max-content;
+      display: grid;
+      grid-template-columns: 64px minmax(max-content, 1fr);
+    }
+
+    .code-line:hover {
+      background: rgba(148, 163, 184, 0.12);
+    }
+
+    .code-viewer.has-code-focus .code-line:not(.code-line-focused) {
+      opacity: 0.22;
+    }
+
+    .code-line-focused {
+      opacity: 1;
+    }
+
+    .code-line-focused .code-line-no {
+      color: #bfdbfe;
+      font-weight: 700;
+    }
+
+    .code-column-focused {
+      opacity: 1;
+    }
+
+    .code-column-muted {
+      opacity: 0.22;
+    }
+
+    .code-line-no {
+      user-select: none;
+      padding: 0 12px 0 8px;
+      border-right: 1px solid #243247;
+      color: #64748b;
+      text-align: right;
+    }
+
+    .code-line-code {
+      padding: 0 12px;
+      white-space: pre;
+    }
+
+    .py-keyword {
+      color: #93c5fd;
+      font-weight: 700;
+    }
+
+    .py-builtin {
+      color: #67e8f9;
+    }
+
+    .py-string {
+      color: #86efac;
+    }
+
+    .py-comment {
+      color: #94a3b8;
+      font-style: italic;
+    }
+
+    .py-number {
+      color: #fbbf24;
+    }
+
+    .py-decorator {
+      color: #c4b5fd;
+      font-weight: 700;
+    }
+
+    .code-drawer-resize-handle {
+      position: absolute;
+      top: 0;
+      right: -5px;
+      bottom: 0;
+      width: 10px;
+      cursor: col-resize;
+    }
+
+    .code-drawer-resize-handle::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: 3px;
+      width: 3px;
+      height: 48px;
+      border-radius: 999px;
+      background: rgba(100, 116, 139, 0.45);
+      transform: translateY(-50%);
+    }
+
     @media (max-width: 980px) {
       .workspace {
         grid-template-columns: 1fr;
@@ -538,6 +1099,11 @@
 
       .side {
         display: none;
+      }
+
+      .code-drawer {
+        min-width: 0;
+        max-width: 100vw;
       }
 
       .topbar {
@@ -562,10 +1128,12 @@
       <div class="brand">
         <div class="mark" aria-hidden="true"></div>
         <div class="brand-title">LLO Dump Timeline</div>
+        <button id="codeDrawerToggle" class="icon-button" type="button" title="Code viewer" aria-label="Toggle code viewer" aria-expanded="false" aria-controls="codeDrawer">&lt;&gt;</button>
       </div>
-      <select id="kernelSelect" class="kernel-select" disabled>
-        <option>Import an LLO dump folder</option>
-      </select>
+      <div class="kernel-picker">
+        <input id="kernelSearchInput" class="kernel-search" type="search" placeholder="Search final_bundles" aria-label="Search final_bundles kernels" aria-autocomplete="list" aria-controls="kernelSuggestions" aria-expanded="false" role="combobox" disabled>
+        <div id="kernelSuggestions" class="kernel-suggestions" role="listbox"></div>
+      </div>
       <div class="file-actions">
         <label class="primary-button" for="folderInput">Import Folder</label>
         <input id="folderInput" class="file-input" type="file" webkitdirectory directory multiple>
@@ -597,11 +1165,11 @@
                 <div id="depMetric" class="metric-value">0</div>
               </div>
               <div class="metric">
-                <div class="metric-label">MXU Avg</div>
+                <div class="metric-label">Util Tracks</div>
                 <div id="mxuAvgMetric" class="metric-value">0%</div>
               </div>
               <div class="metric">
-                <div class="metric-label">MXU Source</div>
+                <div class="metric-label">Util Source</div>
                 <div id="mxuSourceMetric" class="metric-value">none</div>
               </div>
               <div class="metric">
@@ -652,7 +1220,7 @@
           <div class="section-header">Selection</div>
           <div id="selectionPanel" class="section-body">
             <div class="selection-empty">
-              Click an instruction block to highlight the instruction and draw dependency arrows. Hover blocks for cycle, hardware, and full instruction text.
+              Click an instruction block to highlight dependencies. Use W/S to zoom and A/D to pan.
             </div>
           </div>
         </section>
@@ -665,11 +1233,16 @@
             <input id="zoomSlider" type="range" min="0" max="100" value="34">
             <span id="zoomLabel">12 px/cycle</span>
           </div>
+          <div class="mode-toggle" aria-label="Timeline interaction mode">
+            <button id="panModeButton" class="active" type="button">Pan</button>
+            <button id="selectModeButton" type="button">Select</button>
+          </div>
           <div class="cycle-jump">
             <label for="cycleInput">Cycle</label>
             <input id="cycleInput" type="number" min="0" value="0">
             <button id="goButton" class="ghost-button">Go</button>
           </div>
+          <div id="cycleSelectionSummary" class="cycle-selection-summary">No cycle range</div>
           <div class="check-row">
             <label><input id="transitiveToggle" type="checkbox" checked>Full chain</label>
           </div>
@@ -681,9 +1254,40 @@
         <div class="canvas-wrap">
           <canvas id="timelineCanvas"></canvas>
           <div id="tooltip" class="tooltip"></div>
+          <div id="selectedInspector" class="selected-inspector hidden"></div>
         </div>
       </main>
     </div>
+
+    <section id="codeDrawer" class="code-drawer" aria-hidden="true" aria-label="Code viewer">
+      <div class="code-drawer-header">
+        <div>
+          <div class="code-drawer-title">Code</div>
+          <div id="codeDrawerSubtitle" class="code-drawer-subtitle">Choose a local Python file</div>
+        </div>
+        <div class="code-drawer-actions">
+          <label id="codeUploadHeaderLabel" class="ghost-button code-upload-label" for="codeFileInput">Choose File</label>
+          <input id="codeFileInput" class="file-input" type="file" accept=".py,text/x-python,text/plain" multiple>
+          <button id="codeDrawerCloseButton" class="ghost-button" type="button">Hide</button>
+        </div>
+      </div>
+      <div class="code-drawer-body">
+        <div id="codeEmptyState" class="code-empty-state">
+          <div class="code-empty-title">No Python files selected</div>
+          <div class="code-empty-text">Choose one or more local Python files. Files stay cached while this page is open, and uploading the same file name replaces the old copy.</div>
+          <label class="primary-button code-upload-label" for="codeFileInput">Choose Python Files</label>
+        </div>
+        <div id="codeContent" class="code-content hidden">
+          <div class="code-meta">
+            <div id="codeFileName" class="code-file-name">No file</div>
+            <div id="codeLineCount">0 lines</div>
+          </div>
+          <div id="codeFileList" class="code-file-list" aria-label="Loaded source files"></div>
+          <pre id="codeViewer" class="code-viewer" aria-label="Python source code"></pre>
+        </div>
+      </div>
+      <div id="codeDrawerResizeHandle" class="code-drawer-resize-handle" aria-hidden="true"></div>
+    </section>
   </div>
 
   <script>
@@ -718,6 +1322,21 @@
       FILL: "FILL tagged"
     };
 
+    const utilizationResourceDefinitions = [
+      { key: "MXU", label: "MXU", aliases: ["MXU"], color: hardwareColors.MXU },
+      { key: "XLU", label: "XLU", aliases: ["XLU"], color: hardwareColors.XLU },
+      { key: "VALU", label: "VALU", aliases: ["VALU"], color: hardwareColors.VALU },
+      { key: "VPOP", label: "VPOP", aliases: ["VPOP"], color: hardwareColors.VPOP },
+      { key: "EUP", label: "EUP", aliases: ["EUP"], color: hardwareColors.EUP },
+      { key: "VLOAD", label: "VLOAD", aliases: ["VLOAD"], color: hardwareColors.VLOAD },
+      { key: "VLOAD_FILL", label: "VLOAD:FILL", aliases: ["VLOAD:FILL", "VLOAD_FILL"], color: spillFillColors.FILL },
+      { key: "VSTORE", label: "VSTORE", aliases: ["VSTORE"], color: hardwareColors.VSTORE },
+      { key: "VSTORE_SPILL", label: "VSTORE:SPILL", aliases: ["VSTORE:SPILL", "VSTORE_SPILL"], color: spillFillColors.SPILL },
+      { key: "SALU", label: "SALU", aliases: ["SALU"], color: hardwareColors.SALU }
+    ];
+
+    const utilizationResourceByKey = new Map(utilizationResourceDefinitions.map(resource => [resource.key, resource]));
+
     const regionPalette = [
       "#2563eb", "#16a34a", "#ea580c", "#7c3aed", "#0891b2", "#be123c", "#475569", "#ca8a04"
     ];
@@ -735,6 +1354,7 @@
     };
 
     const allocationPrefixBytes = 16 * 1024 * 1024;
+    const timelineLeftGutter = 258;
 
     const depColors = {
       ssa: "#2563eb",
@@ -754,20 +1374,43 @@
       order: "Order"
     };
 
+    const showPossibleDependencies = false;
+    const visibleDepTypes = Object.keys(depLabels).filter(type => showPossibleDependencies || !["memoryConservative", "control", "order"].includes(type));
+
+    const pythonKeywords = new Set([
+      "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class", "continue", "def",
+      "del", "elif", "else", "except", "finally", "for", "from", "global", "if", "import", "in", "is",
+      "lambda", "nonlocal", "not", "or", "pass", "raise", "return", "try", "while", "with", "yield"
+    ]);
+
+    const pythonBuiltins = new Set([
+      "abs", "all", "any", "bool", "bytes", "callable", "chr", "dict", "dir", "enumerate", "filter",
+      "float", "format", "getattr", "hasattr", "int", "isinstance", "issubclass", "len", "list", "map",
+      "max", "min", "next", "object", "open", "print", "range", "repr", "reversed", "round", "set",
+      "setattr", "slice", "sorted", "str", "sum", "super", "tuple", "type", "zip"
+    ]);
+
     const state = {
       files: [],
       kernels: [],
       kernelKey: "",
+      kernelSearchQuery: "",
+      kernelSuggestionsOpen: false,
+      highlightedKernelIndex: 0,
       data: null,
       cycleWidth: 12,
       zoom: 34,
       offsetCycle: 0,
       hoveredId: null,
       hoveredMxuCycle: null,
+      hoveredUtilCycle: null,
+      hoveredUtilKey: null,
       hoveredVmemCycle: null,
       hoveredRegionCycle: null,
       selectedId: null,
+      selectionRootId: null,
       selectedDeps: [],
+      pinRoot: false,
       depDirection: "deps",
       variableSearchQuery: "",
       variableSearchMatches: [],
@@ -785,16 +1428,31 @@
         order: true
       },
       showTransitive: true,
+      interactionMode: "pan",
+      cycleSelection: null,
+      selectingCycles: false,
+      selectionDragStartCycle: null,
       renderedRects: new Map(),
       dragging: false,
       dragStartX: 0,
       dragStartOffset: 0,
-      lastCanvasPoint: null
+      pointerDownX: 0,
+      pointerDownY: 0,
+      suppressNextClick: false,
+      lastCanvasPoint: null,
+      codeDrawerOpen: false,
+      codeDrawerWidth: 520,
+      codeDrawerResizing: false,
+      codeFiles: new Map(),
+      activeCodeFileKey: "",
+      codeSourceLocation: null,
+      codeScrollPending: false
     };
 
     const dom = {
       folderInput: document.getElementById("folderInput"),
-      kernelSelect: document.getElementById("kernelSelect"),
+      kernelSearchInput: document.getElementById("kernelSearchInput"),
+      kernelSuggestions: document.getElementById("kernelSuggestions"),
       reloadButton: document.getElementById("reloadButton"),
       status: document.getElementById("status"),
       cycleMetric: document.getElementById("cycleMetric"),
@@ -817,17 +1475,34 @@
       instructionSearchResults: document.getElementById("instructionSearchResults"),
       legend: document.getElementById("legend"),
       selectionPanel: document.getElementById("selectionPanel"),
+      selectedInspector: document.getElementById("selectedInspector"),
       canvas: document.getElementById("timelineCanvas"),
       tooltip: document.getElementById("tooltip"),
       zoomSlider: document.getElementById("zoomSlider"),
       zoomLabel: document.getElementById("zoomLabel"),
+      panModeButton: document.getElementById("panModeButton"),
+      selectModeButton: document.getElementById("selectModeButton"),
+      cycleSelectionSummary: document.getElementById("cycleSelectionSummary"),
       cycleInput: document.getElementById("cycleInput"),
       goButton: document.getElementById("goButton"),
       fitButton: document.getElementById("fitButton"),
       resetButton: document.getElementById("resetButton"),
       transitiveToggle: document.getElementById("transitiveToggle"),
       progress: document.getElementById("progress"),
-      progressBar: document.getElementById("progressBar")
+      progressBar: document.getElementById("progressBar"),
+      codeDrawerToggle: document.getElementById("codeDrawerToggle"),
+      codeDrawer: document.getElementById("codeDrawer"),
+      codeDrawerSubtitle: document.getElementById("codeDrawerSubtitle"),
+      codeUploadHeaderLabel: document.getElementById("codeUploadHeaderLabel"),
+      codeFileInput: document.getElementById("codeFileInput"),
+      codeDrawerCloseButton: document.getElementById("codeDrawerCloseButton"),
+      codeEmptyState: document.getElementById("codeEmptyState"),
+      codeContent: document.getElementById("codeContent"),
+      codeFileName: document.getElementById("codeFileName"),
+      codeLineCount: document.getElementById("codeLineCount"),
+      codeFileList: document.getElementById("codeFileList"),
+      codeViewer: document.getElementById("codeViewer"),
+      codeDrawerResizeHandle: document.getElementById("codeDrawerResizeHandle")
     };
 
     const ctx = dom.canvas.getContext("2d");
@@ -836,17 +1511,50 @@
 
     function init() {
       renderLegend();
+      applyCodeDrawerWidth();
+      updateCodeDrawerUi();
       dom.transitiveToggle.checked = state.showTransitive;
       bindEvents();
+      updateInteractionModeButtons();
+      updateCycleSelectionSummary();
       applyZoom(state.zoom);
       render();
     }
 
     function bindEvents() {
       dom.folderInput.addEventListener("change", onFolderChange);
-      dom.kernelSelect.addEventListener("change", () => {
-        state.kernelKey = dom.kernelSelect.value;
-        loadSelectedKernel();
+      dom.kernelSearchInput.addEventListener("input", event => {
+        state.kernelSearchQuery = event.target.value;
+        state.highlightedKernelIndex = 0;
+        openKernelSuggestions();
+        renderKernelSuggestions();
+      });
+      dom.kernelSearchInput.addEventListener("focus", () => {
+        openKernelSuggestions();
+        renderKernelSuggestions();
+      });
+      dom.kernelSearchInput.addEventListener("keydown", event => {
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          moveKernelHighlight(1);
+        } else if (event.key === "ArrowUp") {
+          event.preventDefault();
+          moveKernelHighlight(-1);
+        } else if (event.key === "Enter") {
+          event.preventDefault();
+          loadHighlightedKernel();
+        } else if (event.key === "Escape") {
+          closeKernelSuggestions();
+        }
+      });
+      dom.kernelSuggestions.addEventListener("mousedown", event => {
+        event.preventDefault();
+        const target = event.target.closest ? event.target : event.target.parentElement;
+        const button = target?.closest(".kernel-suggestion");
+        if (button?.dataset.key) selectKernel(button.dataset.key);
+      });
+      document.addEventListener("click", event => {
+        if (!event.target.closest(".kernel-picker")) closeKernelSuggestions();
       });
       dom.reloadButton.addEventListener("click", loadSelectedKernel);
       dom.zoomSlider.addEventListener("input", event => {
@@ -860,6 +1568,15 @@
       });
       dom.fitButton.addEventListener("click", fitWidth);
       dom.resetButton.addEventListener("click", resetView);
+      dom.panModeButton.addEventListener("click", () => setInteractionMode("pan"));
+      dom.selectModeButton.addEventListener("click", () => {
+        if (state.interactionMode === "select") {
+          clearCycleSelection();
+          setInteractionMode("pan");
+          return;
+        }
+        setInteractionMode("select");
+      });
       dom.transitiveToggle.addEventListener("change", event => {
         state.showTransitive = event.target.checked;
         refreshSelectionDeps();
@@ -878,12 +1595,20 @@
       });
       dom.instructionSearchGoButton.addEventListener("click", () => updateInstructionSearch({ jump: true }));
       dom.instructionSearchClearButton.addEventListener("click", clearInstructionSearch);
+      dom.codeDrawerToggle.addEventListener("click", () => setCodeDrawerOpen(!state.codeDrawerOpen));
+      dom.codeDrawerCloseButton.addEventListener("click", () => setCodeDrawerOpen(false));
+      dom.codeFileInput.addEventListener("change", onCodeFileChange);
+      dom.codeDrawerResizeHandle.addEventListener("mousedown", onCodeDrawerResizeStart);
       window.addEventListener("keydown", onGlobalKeyDown);
+      window.addEventListener("mousemove", onCodeDrawerResizeMove);
+      window.addEventListener("mouseup", onCodeDrawerResizeEnd);
 
       dom.canvas.addEventListener("mousemove", onCanvasMouseMove);
       dom.canvas.addEventListener("mouseleave", () => {
         state.hoveredId = null;
         state.hoveredMxuCycle = null;
+        state.hoveredUtilCycle = null;
+        state.hoveredUtilKey = null;
         state.hoveredVmemCycle = null;
         state.hoveredRegionCycle = null;
         state.lastCanvasPoint = null;
@@ -892,44 +1617,536 @@
       });
       dom.canvas.addEventListener("click", onCanvasClick);
       dom.canvas.addEventListener("wheel", onCanvasWheel, { passive: false });
-      dom.canvas.addEventListener("mousedown", event => {
-        rememberCanvasPoint(event);
-        state.dragging = true;
-        state.dragStartX = event.clientX;
-        state.dragStartOffset = state.offsetCycle;
-      });
-      window.addEventListener("mouseup", () => {
-        state.dragging = false;
-      });
+      dom.canvas.addEventListener("mousedown", onCanvasMouseDown);
+      window.addEventListener("mouseup", onWindowMouseUp);
       window.addEventListener("mousemove", event => {
-        if (!state.dragging || !state.data) return;
-        rememberCanvasPoint(event);
-        const deltaCycles = (state.dragStartX - event.clientX) / state.cycleWidth;
-        state.offsetCycle = state.dragStartOffset + deltaCycles;
-        clampOffset();
-        render();
+        if (!state.data) return;
+        if (state.selectingCycles) {
+          updateCycleSelectionFromEvent(event);
+          return;
+        }
+        if (state.dragging) {
+          rememberCanvasPoint(event);
+          const deltaCycles = (state.dragStartX - event.clientX) / state.cycleWidth;
+          state.offsetCycle = state.dragStartOffset + deltaCycles;
+          if (Math.hypot(event.clientX - state.pointerDownX, event.clientY - state.pointerDownY) > 3) {
+            state.suppressNextClick = true;
+          }
+          clampOffset();
+          render();
+        }
       });
 
       window.addEventListener("resize", () => {
+        applyCodeDrawerWidth();
         if (state.data) applyZoom(state.zoom);
         render();
       });
     }
 
+    function setCodeDrawerOpen(open) {
+      state.codeDrawerOpen = Boolean(open);
+      updateCodeDrawerUi();
+      if (state.codeDrawerOpen) scrollToCodeSourceLocation();
+    }
+
+    function updateCodeDrawerUi() {
+      const activeFile = getActiveCodeFile();
+      const hasFile = state.codeFiles.size > 0;
+      const range = getCodeSourceRange();
+      const matchedLocationFile = getCodeFileForLocation(state.codeSourceLocation);
+      dom.codeDrawer.classList.toggle("open", state.codeDrawerOpen);
+      dom.codeDrawer.setAttribute("aria-hidden", state.codeDrawerOpen ? "false" : "true");
+      dom.codeDrawerToggle.classList.toggle("active", state.codeDrawerOpen);
+      dom.codeDrawerToggle.setAttribute("aria-expanded", state.codeDrawerOpen ? "true" : "false");
+      if (state.codeSourceLocation && matchedLocationFile) {
+        dom.codeDrawerSubtitle.textContent = formatSourceLocation(state.codeSourceLocation);
+        dom.codeDrawerSubtitle.title = formatSourceLocation(state.codeSourceLocation);
+      } else if (state.codeSourceLocation) {
+        const basename = sourceBasename(state.codeSourceLocation.path || state.codeSourceLocation.file || "");
+        dom.codeDrawerSubtitle.textContent = `Missing source file: ${basename}`;
+        dom.codeDrawerSubtitle.title = formatSourceLocation(state.codeSourceLocation);
+      } else {
+        dom.codeDrawerSubtitle.textContent = hasFile ? `${state.codeFiles.size.toLocaleString()} source files loaded` : "Choose local Python files";
+        dom.codeDrawerSubtitle.title = "";
+      }
+      dom.codeUploadHeaderLabel.textContent = hasFile ? "Upload / Replace" : "Choose File";
+      dom.codeEmptyState.classList.toggle("hidden", hasFile);
+      dom.codeContent.classList.toggle("hidden", !hasFile);
+      dom.codeFileName.textContent = activeFile ? activeFile.name : "No file";
+      dom.codeFileName.title = activeFile ? activeFile.name : "";
+      dom.codeLineCount.textContent = range
+        ? `${activeFile.lineCount.toLocaleString()} ${activeFile.lineCount === 1 ? "line" : "lines"} · source ${formatLineRange(range)}`
+        : (activeFile ? `${activeFile.lineCount.toLocaleString()} ${activeFile.lineCount === 1 ? "line" : "lines"}` : "0 lines");
+      dom.codeLineCount.title = state.codeSourceLocation ? formatSourceLocation(state.codeSourceLocation) : "";
+      renderCodeFileList();
+    }
+
+    async function onCodeFileChange(event) {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+      try {
+        let lastKey = "";
+        for (const file of files) {
+          const text = await file.text();
+          const name = file.webkitRelativePath || file.name || "python_source.py";
+          const basename = sourceBasename(name);
+          const key = normalizeCodeFileKey(basename);
+          state.codeFiles.set(key, {
+            key,
+            name,
+            basename,
+            text,
+            lineCount: countCodeLines(text)
+          });
+          lastKey = key;
+        }
+        state.activeCodeFileKey = chooseActiveCodeFileKey(lastKey);
+        if (state.selectedId !== null) {
+          updateCodeSourceLocationFromSelection({ scroll: true });
+        } else {
+          renderCodeViewer();
+        }
+        setCodeDrawerOpen(true);
+      } catch (error) {
+        console.error(error);
+        setStatus(`Code load failed: ${error.message}`);
+      } finally {
+        event.target.value = "";
+      }
+    }
+
+    function renderCodeViewer() {
+      const activeFile = getActiveCodeFile();
+      const range = getCodeSourceRange();
+      dom.codeViewer.classList.toggle("has-code-focus", Boolean(range));
+      dom.codeViewer.innerHTML = activeFile ? highlightPythonCode(activeFile.text, range) : "";
+      updateCodeDrawerUi();
+    }
+
+    function countCodeLines(text) {
+      if (!text) return 0;
+      const lines = String(text).replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+      if (lines.length > 1 && lines[lines.length - 1] === "") lines.pop();
+      return lines.length;
+    }
+
+    function getActiveCodeFile() {
+      return state.codeFiles.get(state.activeCodeFileKey) || null;
+    }
+
+    function normalizeCodeFileKey(name) {
+      return String(name || "").trim().toLowerCase();
+    }
+
+    function chooseActiveCodeFileKey(fallbackKey = "") {
+      const locationFile = getCodeFileForLocation(state.codeSourceLocation);
+      if (locationFile) return locationFile.key;
+      if (fallbackKey && state.codeFiles.has(fallbackKey)) return fallbackKey;
+      if (state.activeCodeFileKey && state.codeFiles.has(state.activeCodeFileKey)) return state.activeCodeFileKey;
+      return state.codeFiles.keys().next().value || "";
+    }
+
+    function getCodeFileForLocation(location) {
+      if (!location) return null;
+      const basename = sourceBasename(location.path || location.file || "");
+      const key = normalizeCodeFileKey(basename);
+      return state.codeFiles.get(key) || null;
+    }
+
+    function renderCodeFileList() {
+      if (!dom.codeFileList) return;
+      dom.codeFileList.innerHTML = "";
+      const locationBasename = state.codeSourceLocation
+        ? sourceBasename(state.codeSourceLocation.path || state.codeSourceLocation.file || "")
+        : "";
+      const locationKey = normalizeCodeFileKey(locationBasename);
+      if (locationBasename && !state.codeFiles.has(locationKey)) {
+        const missing = document.createElement("div");
+        missing.className = "code-file-item code-file-item-missing";
+        const main = document.createElement("div");
+        main.className = "code-file-item-main";
+        const name = document.createElement("div");
+        name.className = "code-file-item-name";
+        name.textContent = locationBasename;
+        const meta = document.createElement("div");
+        meta.className = "code-file-item-meta";
+        meta.textContent = "Source location needs this file";
+        main.append(name, meta);
+        missing.append(main);
+        dom.codeFileList.append(missing);
+      }
+      for (const file of Array.from(state.codeFiles.values()).sort(compareCodeFiles)) {
+        const item = document.createElement("div");
+        item.className = `code-file-item${file.key === state.activeCodeFileKey ? " active" : ""}`;
+        item.title = file.name;
+        item.addEventListener("click", () => setActiveCodeFile(file.key));
+
+        const main = document.createElement("div");
+        main.className = "code-file-item-main";
+        const name = document.createElement("div");
+        name.className = "code-file-item-name";
+        name.textContent = file.basename;
+        const meta = document.createElement("div");
+        meta.className = "code-file-item-meta";
+        meta.textContent = `${file.lineCount.toLocaleString()} ${file.lineCount === 1 ? "line" : "lines"}${file.key === locationKey ? " · source match" : ""}`;
+        main.append(name, meta);
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "code-file-delete";
+        remove.textContent = "x";
+        remove.title = `Remove ${file.basename}`;
+        remove.addEventListener("click", event => {
+          event.stopPropagation();
+          removeCodeFile(file.key);
+        });
+        item.append(main, remove);
+        dom.codeFileList.append(item);
+      }
+    }
+
+    function compareCodeFiles(left, right) {
+      return left.basename.localeCompare(right.basename) || left.name.localeCompare(right.name);
+    }
+
+    function setActiveCodeFile(key) {
+      if (!state.codeFiles.has(key)) return;
+      state.activeCodeFileKey = key;
+      renderCodeViewer();
+    }
+
+    function removeCodeFile(key) {
+      if (!state.codeFiles.has(key)) return;
+      state.codeFiles.delete(key);
+      if (state.activeCodeFileKey === key) {
+        state.activeCodeFileKey = chooseActiveCodeFileKey();
+      }
+      if (!state.codeFiles.size) {
+        state.activeCodeFileKey = "";
+        state.codeScrollPending = false;
+        dom.codeViewer.innerHTML = "";
+        dom.codeViewer.classList.remove("has-code-focus");
+        updateCodeDrawerUi();
+        return;
+      }
+      state.activeCodeFileKey = chooseActiveCodeFileKey();
+      renderCodeViewer();
+      scheduleCodeSourceScroll();
+    }
+
+    function updateCodeSourceLocationFromSelection(options = {}) {
+      const location = getSelectedSourceLocation();
+      const previousKey = sourceLocationKey(state.codeSourceLocation);
+      const nextKey = sourceLocationKey(location);
+      state.codeSourceLocation = location;
+      state.activeCodeFileKey = chooseActiveCodeFileKey();
+      if (getActiveCodeFile()) renderCodeViewer();
+      else updateCodeDrawerUi();
+      if (location && (options.scroll || previousKey !== nextKey)) scheduleCodeSourceScroll();
+    }
+
+    function clearCodeSourceLocation() {
+      if (!state.codeSourceLocation) {
+        updateCodeDrawerUi();
+        return;
+      }
+      state.codeSourceLocation = null;
+      state.codeScrollPending = false;
+      if (getActiveCodeFile()) renderCodeViewer();
+      else updateCodeDrawerUi();
+    }
+
+    function getSelectedSourceLocation() {
+      if (!state.data || state.selectedId === null) return null;
+      const instruction = state.data.instructionMap.get(state.selectedId);
+      if (!instruction) return null;
+      return chooseCodeSourceLocation(instruction.locations || []);
+    }
+
+    function chooseCodeSourceLocation(locations) {
+      const valid = locations.filter(isValidSourceLocation);
+      if (!valid.length) return null;
+      const matched = valid.find(location => getCodeFileForLocation(location));
+      if (matched) return matched;
+      return valid[0];
+    }
+
+    function isValidSourceLocation(location) {
+      return location
+        && Number.isFinite(location.startLine)
+        && Number.isFinite(location.endLine)
+        && location.startLine > 0
+        && location.endLine > 0;
+    }
+
+    function sourceLocationKey(location) {
+      if (!location) return "";
+      return `${location.path || location.file}:${location.startLine}:${location.startColumn}:${location.endLine}:${location.endColumn}`;
+    }
+
+    function getCodeSourceRange() {
+      const activeFile = getActiveCodeFile();
+      if (!state.codeSourceLocation || !activeFile) return null;
+      const locationFile = getCodeFileForLocation(state.codeSourceLocation);
+      if (!locationFile || locationFile.key !== activeFile.key) return null;
+      if (state.codeSourceLocation.startLine > activeFile.lineCount) return null;
+      const startLine = Math.max(1, state.codeSourceLocation.startLine);
+      const endLine = Math.max(startLine, Math.min(activeFile.lineCount, state.codeSourceLocation.endLine));
+      const startColumn = Math.max(1, state.codeSourceLocation.startColumn || 1);
+      const endColumn = Math.max(1, state.codeSourceLocation.endColumn || startColumn);
+      return { startLine, endLine, startColumn, endColumn };
+    }
+
+    function formatLineRange(range) {
+      return range.startLine === range.endLine
+        ? `line ${range.startLine}:${range.startColumn}-${range.endColumn}`
+        : `lines ${range.startLine}:${range.startColumn}-${range.endLine}:${range.endColumn}`;
+    }
+
+    function scheduleCodeSourceScroll() {
+      state.codeScrollPending = true;
+      requestAnimationFrame(scrollToCodeSourceLocation);
+    }
+
+    function scrollToCodeSourceLocation() {
+      if (!state.codeScrollPending) return;
+      if (!state.codeDrawerOpen || !getActiveCodeFile()) return;
+      const range = getCodeSourceRange();
+      if (!range) return;
+      const first = dom.codeViewer.querySelector(`.code-line[data-line="${range.startLine}"]`);
+      const last = dom.codeViewer.querySelector(`.code-line[data-line="${range.endLine}"]`) || first;
+      if (!first) return;
+      const rangeCenter = (first.offsetTop + last.offsetTop + last.offsetHeight) / 2;
+      const centeredTop = rangeCenter - dom.codeViewer.clientHeight / 2;
+      dom.codeViewer.scrollTop = Math.max(0, centeredTop);
+      state.codeScrollPending = false;
+    }
+
+    function highlightPythonCode(source, focusRange = null) {
+      const normalized = String(source || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+      const lines = normalized.split("\n");
+      const stringState = { tripleQuote: null };
+      return lines.map((line, index) => {
+        const lineNumber = index + 1;
+        const focusColumns = getLineFocusColumns(line, lineNumber, focusRange);
+        const focused = Boolean(focusColumns);
+        const className = focused ? "code-line code-line-focused" : "code-line";
+        const highlighted = highlightPythonLine(line, stringState, focusColumns) || " ";
+        return `<span class="${className}" data-line="${lineNumber}"><span class="code-line-no">${lineNumber}</span><span class="code-line-code">${highlighted}</span></span>`;
+      }).join("");
+    }
+
+    function getLineFocusColumns(line, lineNumber, focusRange) {
+      if (!focusRange || lineNumber < focusRange.startLine || lineNumber > focusRange.endLine) return null;
+      const start = lineNumber === focusRange.startLine
+        ? Math.max(0, Math.min(line.length, focusRange.startColumn - 1))
+        : 0;
+      const end = lineNumber === focusRange.endLine
+        ? Math.max(start, Math.min(line.length, focusRange.endColumn))
+        : line.length;
+      if (start >= end) return null;
+      return { start, end };
+    }
+
+    function highlightPythonLine(line, stringState, focusColumns = null) {
+      let output = "";
+      let index = 0;
+      if (stringState.tripleQuote) {
+        const end = line.indexOf(stringState.tripleQuote);
+        if (end === -1) return highlightedCodeFragment(line, "py-string", 0, focusColumns);
+        const endIndex = end + stringState.tripleQuote.length;
+        output += highlightedCodeFragment(line.slice(0, endIndex), "py-string", 0, focusColumns);
+        index = endIndex;
+        stringState.tripleQuote = null;
+      }
+
+      while (index < line.length) {
+        const char = line[index];
+        if (char === "#") {
+          output += highlightedCodeFragment(line.slice(index), "py-comment", index, focusColumns);
+          break;
+        }
+        const stringPrefixEnd = getPythonStringPrefixEnd(line, index);
+        if (stringPrefixEnd !== null) {
+          const stringResult = readPythonString(line, index, stringPrefixEnd, stringState);
+          output += highlightedCodeFragment(stringResult.text, "py-string", index, focusColumns);
+          index = stringResult.end;
+          continue;
+        }
+        if (char === "@" && isIdentifierStart(line[index + 1] || "")) {
+          const end = readWhile(line, index + 1, isIdentifierPart);
+          output += highlightedCodeFragment(line.slice(index, end), "py-decorator", index, focusColumns);
+          index = end;
+          continue;
+        }
+        if (isDigit(char) && !isIdentifierPart(line[index - 1] || "")) {
+          const end = readWhile(line, index, value => /[0-9a-fA-F_xXoObBjJ.]/.test(value));
+          output += highlightedCodeFragment(line.slice(index, end), "py-number", index, focusColumns);
+          index = end;
+          continue;
+        }
+        if (isIdentifierStart(char)) {
+          const end = readWhile(line, index, isIdentifierPart);
+          const token = line.slice(index, end);
+          if (pythonKeywords.has(token)) {
+            output += highlightedCodeFragment(token, "py-keyword", index, focusColumns);
+          } else if (pythonBuiltins.has(token)) {
+            output += highlightedCodeFragment(token, "py-builtin", index, focusColumns);
+          } else {
+            output += highlightedCodeFragment(token, "", index, focusColumns);
+          }
+          index = end;
+          continue;
+        }
+        output += highlightedCodeFragment(char, "", index, focusColumns);
+        index += 1;
+      }
+      return output;
+    }
+
+    function getPythonStringPrefixEnd(line, index) {
+      let cursor = index;
+      while (cursor < line.length && /[rRuUbBfF]/.test(line[cursor]) && cursor - index < 3) {
+        cursor += 1;
+      }
+      if (line[cursor] === "\"" || line[cursor] === "'") return cursor;
+      if (line[index] === "\"" || line[index] === "'") return index;
+      return null;
+    }
+
+    function readPythonString(line, start, quoteIndex, stringState) {
+      const quote = line[quoteIndex];
+      const tripleMarker = quote.repeat(3);
+      const triple = line.slice(quoteIndex, quoteIndex + 3) === tripleMarker;
+      const marker = triple ? tripleMarker : quote;
+      let cursor = quoteIndex + marker.length;
+      while (cursor < line.length) {
+        if (!triple && line[cursor] === "\\") {
+          cursor += 2;
+          continue;
+        }
+        if (line.startsWith(marker, cursor)) {
+          const end = cursor + marker.length;
+          return { text: line.slice(start, end), end };
+        }
+        cursor += 1;
+      }
+      if (triple) stringState.tripleQuote = marker;
+      return { text: line.slice(start), end: line.length };
+    }
+
+    function highlightedCodeFragment(text, className, sourceStart, focusColumns) {
+      if (!text) return "";
+      const sourceEnd = sourceStart + text.length;
+      if (!focusColumns || focusColumns.end <= sourceStart || focusColumns.start >= sourceEnd) {
+        const token = tokenSpan(className, text);
+        return focusColumns ? `<span class="code-column-muted">${token}</span>` : token;
+      }
+      const parts = [];
+      const localFocusStart = Math.max(0, focusColumns.start - sourceStart);
+      const localFocusEnd = Math.min(text.length, focusColumns.end - sourceStart);
+      if (localFocusStart > 0) {
+        parts.push(`<span class="code-column-muted">${tokenSpan(className, text.slice(0, localFocusStart))}</span>`);
+      }
+      parts.push(`<span class="code-column-focused">${tokenSpan(className, text.slice(localFocusStart, localFocusEnd))}</span>`);
+      if (localFocusEnd < text.length) {
+        parts.push(`<span class="code-column-muted">${tokenSpan(className, text.slice(localFocusEnd))}</span>`);
+      }
+      return parts.join("");
+    }
+
+    function tokenSpan(className, text) {
+      const escaped = escapeHtml(text);
+      return className ? `<span class="${className}">${escaped}</span>` : escaped;
+    }
+
+    function isIdentifierStart(value) {
+      return /[A-Za-z_]/.test(value);
+    }
+
+    function isIdentifierPart(value) {
+      return /[A-Za-z0-9_]/.test(value);
+    }
+
+    function isDigit(value) {
+      return /[0-9]/.test(value);
+    }
+
+    function readWhile(text, start, predicate) {
+      let index = start;
+      while (index < text.length && predicate(text[index])) index += 1;
+      return index;
+    }
+
+    function onCodeDrawerResizeStart(event) {
+      event.preventDefault();
+      state.codeDrawerResizing = true;
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    }
+
+    function onCodeDrawerResizeMove(event) {
+      if (!state.codeDrawerResizing) return;
+      event.preventDefault();
+      state.codeDrawerWidth = clampCodeDrawerWidth(event.clientX);
+      applyCodeDrawerWidth();
+    }
+
+    function onCodeDrawerResizeEnd() {
+      if (!state.codeDrawerResizing) return;
+      state.codeDrawerResizing = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    }
+
+    function applyCodeDrawerWidth() {
+      state.codeDrawerWidth = clampCodeDrawerWidth(state.codeDrawerWidth);
+      dom.codeDrawer.style.width = `${state.codeDrawerWidth}px`;
+    }
+
+    function clampCodeDrawerWidth(width) {
+      const viewportWidth = Math.max(320, window.innerWidth || 1200);
+      const minWidth = Math.min(360, viewportWidth - 24);
+      const maxRatio = viewportWidth < 980 ? 0.96 : 0.72;
+      const maxWidth = Math.max(minWidth, Math.min(1100, viewportWidth * maxRatio));
+      return Math.round(Math.max(minWidth, Math.min(maxWidth, width || 520)));
+    }
+
     async function onFolderChange(event) {
       state.files = Array.from(event.target.files || []);
       state.kernels = discoverKernels(state.files);
-      populateKernelSelect();
+      state.kernelKey = "";
+      state.data = null;
+      state.selectedId = null;
+      state.selectionRootId = null;
+      state.selectedDeps = [];
+      clearCodeSourceLocation();
+      clearCycleSelection();
+      state.hoveredId = null;
+      state.hoveredMxuCycle = null;
+      state.hoveredUtilCycle = null;
+      state.hoveredUtilKey = null;
+      state.hoveredVmemCycle = null;
+      state.hoveredRegionCycle = null;
+      clearKernelSearch({ renderNow: false });
+      clearVariableSearch({ renderNow: false });
+      clearInstructionSearch({ renderNow: false });
+      resetMetrics();
+      renderVariableSearchResults();
+      renderInstructionSearchResults();
+      renderSelectionPanel();
+      render();
       if (!state.kernels.length) {
+        renderKernelPicker();
         setStatus("No *-final_bundles.txt files found");
         return;
       }
-      const defaultKernel = state.kernels
-        .slice()
-        .sort((a, b) => (b.files.finalBundles?.size || 0) - (a.files.finalBundles?.size || 0))[0];
-      state.kernelKey = defaultKernel.key;
-      dom.kernelSelect.value = state.kernelKey;
-      await loadSelectedKernel();
+      renderKernelPicker();
+      openKernelSuggestions();
+      renderKernelSuggestions();
+      dom.kernelSearchInput.focus();
+      setStatus(`Found ${state.kernels.length.toLocaleString()} kernels. Choose a final_bundles file.`);
     }
 
     function discoverKernels(files) {
@@ -975,7 +2192,15 @@
           kernel.files.allocationSourceSuffix = selected.suffix;
         }
       }
-      return Array.from(kernels.values()).filter(kernel => kernel.files.finalBundles);
+      return Array.from(kernels.values())
+        .filter(kernel => kernel.files.finalBundles)
+        .sort(compareKernelsByBundleSize);
+    }
+
+    function compareKernelsByBundleSize(left, right) {
+      const sizeDelta = (right.files.finalBundles?.size || 0) - (left.files.finalBundles?.size || 0);
+      if (sizeDelta !== 0) return sizeDelta;
+      return kernelOptionLabel(left).localeCompare(kernelOptionLabel(right));
     }
 
     function allocationSourcePriority(suffix) {
@@ -986,39 +2211,177 @@
       return Number.POSITIVE_INFINITY;
     }
 
-    function populateKernelSelect() {
-      dom.kernelSelect.innerHTML = "";
-      if (!state.kernels.length) {
-        const option = document.createElement("option");
-        option.textContent = "No kernels with final_bundles found";
-        dom.kernelSelect.append(option);
-        dom.kernelSelect.disabled = true;
-        dom.reloadButton.disabled = true;
+    function renderKernelPicker() {
+      const hasKernels = state.kernels.length > 0;
+      dom.kernelSearchInput.disabled = !hasKernels;
+      dom.reloadButton.disabled = !state.kernelKey;
+      if (!hasKernels) {
+        dom.kernelSearchInput.value = "";
+        dom.kernelSearchInput.placeholder = "Import an LLO dump folder";
+        closeKernelSuggestions();
         return;
       }
-      for (const kernel of state.kernels) {
-        const option = document.createElement("option");
-        option.value = kernel.key;
-        const extras = [
-          kernel.files.finalUtil ? "util" : "",
-          kernel.files.allocationSource ? "alloc" : "",
-          kernel.files.dependencyIr ? "ir" : ""
-        ].filter(Boolean).join(", ");
-        option.textContent = `${kernel.kernel}  ${kernel.timestamp}  (${formatBytes(kernel.files.finalBundles.size)}${extras ? `, ${extras}` : ""})`;
-        dom.kernelSelect.append(option);
+      dom.kernelSearchInput.placeholder = "Search final_bundles";
+      renderKernelSuggestions();
+    }
+
+    function openKernelSuggestions() {
+      if (!state.kernels.length) return;
+      state.kernelSuggestionsOpen = true;
+      dom.kernelSearchInput.setAttribute("aria-expanded", "true");
+    }
+
+    function closeKernelSuggestions() {
+      state.kernelSuggestionsOpen = false;
+      dom.kernelSearchInput.setAttribute("aria-expanded", "false");
+      dom.kernelSearchInput.removeAttribute("aria-activedescendant");
+      dom.kernelSuggestions.classList.remove("open");
+    }
+
+    function renderKernelSuggestions() {
+      dom.kernelSuggestions.innerHTML = "";
+      const kernels = getFilteredKernels();
+      if (!state.kernelSuggestionsOpen || !state.kernels.length) {
+        dom.kernelSuggestions.classList.remove("open");
+        return;
       }
-      dom.kernelSelect.disabled = false;
-      dom.reloadButton.disabled = false;
+      dom.kernelSuggestions.classList.add("open");
+      if (!kernels.length) {
+        const empty = document.createElement("div");
+        empty.className = "kernel-suggestion-empty";
+        empty.textContent = "No matching final_bundles";
+        dom.kernelSuggestions.append(empty);
+        dom.kernelSearchInput.removeAttribute("aria-activedescendant");
+        return;
+      }
+      state.highlightedKernelIndex = Math.max(0, Math.min(state.highlightedKernelIndex, kernels.length - 1));
+      for (const [index, kernel] of kernels.entries()) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.id = `kernelSuggestion-${index}`;
+        button.className = `kernel-suggestion${index === state.highlightedKernelIndex ? " active" : ""}`;
+        button.dataset.key = kernel.key;
+        button.setAttribute("role", "option");
+        button.setAttribute("aria-selected", index === state.highlightedKernelIndex ? "true" : "false");
+        const text = document.createElement("div");
+        text.className = "kernel-suggestion-text";
+        const name = document.createElement("div");
+        name.className = "kernel-suggestion-name";
+        name.textContent = kernel.files.finalBundles?.name || kernel.kernel;
+        const meta = document.createElement("div");
+        meta.className = "kernel-suggestion-meta";
+        meta.textContent = kernelSuggestionMeta(kernel);
+        const size = document.createElement("div");
+        size.className = "kernel-suggestion-size";
+        size.textContent = formatBytes(kernel.files.finalBundles?.size || 0);
+        text.append(name, meta);
+        button.append(text, size);
+        dom.kernelSuggestions.append(button);
+      }
+      dom.kernelSearchInput.setAttribute("aria-activedescendant", `kernelSuggestion-${state.highlightedKernelIndex}`);
+    }
+
+    function moveKernelHighlight(delta) {
+      const kernels = getFilteredKernels();
+      if (!kernels.length) return;
+      openKernelSuggestions();
+      state.highlightedKernelIndex = (state.highlightedKernelIndex + delta + kernels.length) % kernels.length;
+      renderKernelSuggestions();
+    }
+
+    function loadHighlightedKernel() {
+      const kernels = getFilteredKernels();
+      if (!kernels.length) return;
+      const index = Math.max(0, Math.min(state.highlightedKernelIndex, kernels.length - 1));
+      selectKernel(kernels[index].key);
+    }
+
+    function selectKernel(key) {
+      const kernel = state.kernels.find(item => item.key === key);
+      if (!kernel) return;
+      state.kernelKey = kernel.key;
+      state.kernelSearchQuery = kernelOptionLabel(kernel);
+      dom.kernelSearchInput.value = state.kernelSearchQuery;
+      closeKernelSuggestions();
+      loadSelectedKernel();
+    }
+
+    function getFilteredKernels() {
+      return state.kernels.filter(kernel => kernelMatchesSearch(kernel, state.kernelSearchQuery));
+    }
+
+    function kernelOptionLabel(kernel) {
+      const extras = [
+        kernelUtilFile(kernel) ? "util" : "",
+        kernel.files.allocationSource ? "alloc" : "",
+        kernel.files.dependencyIr ? "ir" : ""
+      ].filter(Boolean).join(", ");
+      return `${kernel.kernel} ${kernel.timestamp} (${formatBytes(kernel.files.finalBundles.size)}${extras ? `, ${extras}` : ""})`;
+    }
+
+    function kernelSuggestionMeta(kernel) {
+      const extras = [
+        kernelUtilFile(kernel) ? "util" : "",
+        kernel.files.allocationSource ? "alloc" : "",
+        kernel.files.dependencyIr ? "ir" : ""
+      ].filter(Boolean).join(", ");
+      return [kernel.kernel, kernel.timestamp, extras].filter(Boolean).join(" · ");
+    }
+
+    function kernelUtilFile(kernel) {
+      return kernel.files.finalUtil || kernel.files.preDelayUtil || null;
+    }
+
+    function kernelSearchText(kernel) {
+      return [
+        kernelOptionLabel(kernel),
+        kernel.files.finalBundles?.name,
+        kernel.files.finalBundles?.webkitRelativePath,
+        kernelUtilFile(kernel)?.name,
+        kernel.files.allocationSource?.name,
+        kernel.files.dependencyIr?.name
+      ].filter(Boolean).join(" ");
+    }
+
+    function kernelMatchesSearch(kernel, query) {
+      const normalizedQuery = normalizeKernelSearch(query);
+      if (!normalizedQuery) return true;
+      const text = normalizeKernelSearch(kernelSearchText(kernel));
+      const initials = text
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(token => token[0])
+        .join("");
+      return normalizedQuery.split(/\s+/).every(term => {
+        return text.includes(term) || initials.includes(term);
+      });
+    }
+
+    function clearKernelSearch(options = {}) {
+      state.kernelSearchQuery = "";
+      state.highlightedKernelIndex = 0;
+      dom.kernelSearchInput.value = "";
+      if (options.renderNow !== false) {
+        renderKernelPicker();
+        openKernelSuggestions();
+        renderKernelSuggestions();
+      }
     }
 
     async function loadSelectedKernel() {
       const kernel = state.kernels.find(item => item.key === state.kernelKey);
       if (!kernel) return;
+      dom.reloadButton.disabled = true;
       state.data = null;
       state.selectedId = null;
+      state.selectionRootId = null;
       state.selectedDeps = [];
+      clearCodeSourceLocation();
+      clearCycleSelection();
       state.hoveredId = null;
       state.hoveredMxuCycle = null;
+      state.hoveredUtilCycle = null;
+      state.hoveredUtilKey = null;
       state.hoveredVmemCycle = null;
       state.hoveredRegionCycle = null;
       clearVariableSearch({ renderNow: false });
@@ -1029,8 +2392,9 @@
       showProgress(true, 0);
       setStatus("Reading final_bundles...");
       try {
+        const utilFile = kernelUtilFile(kernel);
         const bundleText = await kernel.files.finalBundles.text();
-        const utilText = kernel.files.finalUtil ? await kernel.files.finalUtil.text() : "";
+        const utilText = utilFile ? await utilFile.text() : "";
         const allocationText = kernel.files.allocationSource ? await readAllocationPrefix(kernel.files.allocationSource) : "";
         setStatus("Parsing final_bundles...");
         const parsed = await parseBundles(bundleText, utilText, allocationText, progress => {
@@ -1038,7 +2402,7 @@
           if (progress > 0 && progress < 1) {
             setStatus(`Parsing ${Math.round(progress * 100)}%`);
           }
-        });
+        }, utilFile?.name || "");
         parsed.kernel = kernel;
         state.data = parsed;
         applyZoom(state.zoom);
@@ -1049,11 +2413,13 @@
         refreshMetrics();
         showProgress(false, 1);
         setStatus(`Loaded ${parsed.instructions.length.toLocaleString()} instructions`);
+        dom.reloadButton.disabled = false;
         renderSelectionPanel();
         render();
       } catch (error) {
         console.error(error);
         showProgress(false, 0);
+        dom.reloadButton.disabled = false;
         setStatus(`Load failed: ${error.message}`);
       }
     }
@@ -1063,7 +2429,7 @@
       return file.slice(0, end).text();
     }
 
-    async function parseBundles(bundleText, utilText, allocationText, onProgress) {
+    async function parseBundles(bundleText, utilText, allocationText, onProgress, utilSourceName = "") {
       const cycles = new Map();
       const instructions = [];
       const defMap = new Map();
@@ -1124,6 +2490,7 @@
             spillFill: parsedInstruction.spillFill,
             defIds: parsedInstruction.defIds,
             useIds: parsedInstruction.useIds,
+            locations: parsedInstruction.locations,
             memory: parsedInstruction.memory,
             deps: [],
             dependents: []
@@ -1164,9 +2531,10 @@
       attachDependents(instructions);
       const variableIndex = buildVariableIndex(instructions);
       const regionData = buildRegionData(regionEvents, Number.isFinite(minCycle) ? minCycle : 0, maxCycle);
-      const util = parseUtilization(utilText);
+      const util = parseUtilization(utilText, utilSourceName);
       attachUtilization(cycleList, util);
       const mxuUtil = buildMxuUtilization(cycleList, util);
+      const resourceUtils = buildResourceUtilizations(cycleList, util, mxuUtil);
       attachMxuUtilization(cycleList, mxuUtil);
       const vmemAlloc = buildVmemAllocationTimeline(cycleList, instructions, allocationText);
       attachVmemAllocation(cycleList, vmemAlloc);
@@ -1182,6 +2550,7 @@
         variableIndex,
         regionData,
         util,
+        resourceUtils,
         mxuUtil,
         vmemAlloc
       };
@@ -1222,6 +2591,7 @@
     function parseInstruction(raw) {
       const trimmed = raw.trim();
       if (!trimmed) return null;
+      const locations = extractSourceLocations(trimmed);
       const codeWithLabels = stripMetadataComment(trimmed);
       const code = stripBlockComments(codeWithLabels).replace(/\s+/g, " ").trim();
       const display = compactInstruction(trimmed);
@@ -1241,8 +2611,40 @@
         spillFill,
         defIds,
         useIds,
+        locations,
         memory
       };
+    }
+
+    function extractSourceLocations(raw) {
+      const locations = [];
+      const seen = new Set();
+      const regex = /loc\("([^"]+)":(\d+):(\d+)\s+to\s+(?:(\d+)?:)?(\d+)\)/g;
+      let match;
+      while ((match = regex.exec(raw)) !== null) {
+        const path = match[1];
+        const startLine = Number(match[2]);
+        const startColumn = Number(match[3]);
+        const endLine = Number(match[4] || match[2]);
+        const endColumn = Number(match[5]);
+        const key = `${path}:${startLine}:${startColumn}:${endLine}:${endColumn}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        locations.push({
+          path,
+          file: sourceBasename(path),
+          startLine,
+          startColumn,
+          endLine,
+          endColumn
+        });
+      }
+      return locations;
+    }
+
+    function sourceBasename(path) {
+      const parts = String(path || "").split("/");
+      return parts[parts.length - 1] || path;
     }
 
     function stripMetadataComment(raw) {
@@ -1603,6 +3005,7 @@
     function dedupeDeps(instruction) {
       const seen = new Set();
       instruction.deps = instruction.deps.filter(dep => {
+        if (!showPossibleDependencies && dep.confidence === "possible") return false;
         if (dep.source === instruction.id || dep.source === undefined) return false;
         const key = `${dep.source}:${dep.type}:${dep.reason}`;
         if (seen.has(key)) return false;
@@ -1749,12 +3152,12 @@
       if (index >= 0) stack.splice(index, 1);
     }
 
-    function parseUtilization(text) {
-      if (!text) return { capacity: [], rows: [] };
+    function parseUtilization(text, source = "") {
+      if (!text) return { capacity: [], rows: [], source: "", sourceKind: "none" };
       const lines = text.split(/\r?\n/);
       const capacityIndex = lines.findIndex(line => line.startsWith("== CAPACTIY") || line.startsWith("== CAPACITY"));
       const utilIndex = lines.findIndex(line => line.startsWith("== UTILIZATION"));
-      if (capacityIndex < 0 || utilIndex < 0) return { capacity: [], rows: [] };
+      if (capacityIndex < 0 || utilIndex < 0) return { capacity: [], rows: [], source: "", sourceKind: "none" };
       const labels = (lines[capacityIndex + 1] || "").split(",").map(item => item.trim()).filter(Boolean);
       const capacities = (lines[capacityIndex + 2] || "").trim().split(/\s+/).map(Number);
       const capacity = labels.map((name, index) => ({ name, capacity: capacities[index] || 0 }));
@@ -1766,7 +3169,12 @@
         if (values.some(Number.isNaN)) continue;
         rows.push(values);
       }
-      return { capacity, rows };
+      return {
+        capacity,
+        rows,
+        source: source || "static-per-bundle-utilization",
+        sourceKind: source && source.includes("pre-delay") ? "pre-delay" : "final_hlo"
+      };
     }
 
     function attachUtilization(cycles, util) {
@@ -1797,23 +3205,9 @@
       }
       const columns = counterColumns.length ? counterColumns : staticColumns;
       if (!columns.length) return null;
-      const capacitySum = columns.reduce((sum, index) => {
-        const value = Number(util.capacity[index].capacity);
-        return sum + (Number.isFinite(value) && value > 0 ? value : 0);
-      }, 0);
-      const capacity = Math.max(1, capacitySum || columns.length);
-      const rows = cycles.map((cycle, index) => {
-        const values = util.rows[index] || [];
-        const busy = columns.reduce((sum, column) => {
-          const value = Number(values[column]);
-          return sum + (Number.isFinite(value) && value > 0 ? value : 0);
-        }, 0);
-        return makeMxuRow(cycle.cycle, busy, capacity);
-      });
-      const sourceKind = counterColumns.length ? "counter" : "final_hlo";
-      const source = counterColumns.length ? "COUNTER_MXU_BUSY columns" : "final_hlo MXU utilization";
-      const labels = columns.map(index => util.capacity[index].name);
-      return summarizeMxuRows(rows, source, sourceKind, labels);
+      const sourceKind = counterColumns.length ? "counter" : (util.sourceKind || "final_hlo");
+      const source = counterColumns.length ? "COUNTER_MXU_BUSY columns" : `${util.source || "static-per-bundle-utilization"} MXU`;
+      return buildUtilizationFromColumns(cycles, util, columns, utilizationResourceByKey.get("MXU"), source, sourceKind);
     }
 
     function buildMxuUtilizationFromInstructions(cycles) {
@@ -1842,6 +3236,10 @@
     }
 
     function makeMxuRow(cycle, busy, capacity) {
+      return makeUtilizationRow(cycle, busy, capacity);
+    }
+
+    function makeUtilizationRow(cycle, busy, capacity) {
       const normalizedCapacity = Math.max(1, capacity || 1);
       const normalizedBusy = Math.max(0, busy || 0);
       return {
@@ -1853,10 +3251,17 @@
     }
 
     function summarizeMxuRows(rows, source, sourceKind, labels) {
+      return summarizeUtilizationRows(rows, source, sourceKind, labels, utilizationResourceByKey.get("MXU"));
+    }
+
+    function summarizeUtilizationRows(rows, source, sourceKind, labels, resource) {
       const average = rows.length ? rows.reduce((sum, row) => sum + row.ratio, 0) / rows.length : 0;
       const peak = rows.reduce((max, row) => Math.max(max, row.ratio), 0);
       const capacity = rows.reduce((max, row) => Math.max(max, row.capacity), 1);
       return {
+        key: resource.key,
+        label: resource.label,
+        color: resource.color,
         source,
         sourceKind,
         labels,
@@ -1866,6 +3271,91 @@
         peak,
         capacity
       };
+    }
+
+    function buildResourceUtilizations(cycles, util, mxuUtil) {
+      const resources = [];
+      if (util.capacity.length && util.rows.length) {
+        const groups = new Map();
+        for (let index = 0; index < util.capacity.length; index += 1) {
+          const resource = utilizationResourceForColumn(util.capacity[index].name);
+          if (!resource) continue;
+          if (!groups.has(resource.key)) groups.set(resource.key, { resource, columns: [] });
+          groups.get(resource.key).columns.push(index);
+        }
+        for (const resource of utilizationResourceDefinitions) {
+          const group = groups.get(resource.key);
+          if (!group) continue;
+          if (resource.key === "MXU" && mxuUtil) {
+            resources.push({
+              ...mxuUtil,
+              key: "MXU",
+              label: "MXU",
+              color: resource.color
+            });
+            continue;
+          }
+          const summary = buildUtilizationFromColumns(
+            cycles,
+            util,
+            group.columns,
+            resource,
+            `${util.source || "static-per-bundle-utilization"} ${resource.label}`,
+            util.sourceKind || "final_hlo"
+          );
+          if (summary) resources.push(summary);
+        }
+      }
+
+      if (!resources.length && mxuUtil) {
+        resources.push({
+          ...mxuUtil,
+          key: "MXU",
+          label: "MXU",
+          color: utilizationResourceByKey.get("MXU").color
+        });
+      }
+
+      return resources.length
+        ? {
+            source: util.source || mxuUtil?.source || "",
+            sourceKind: util.sourceKind && util.sourceKind !== "none" ? util.sourceKind : (mxuUtil?.sourceKind || "none"),
+            resources,
+            resourceMap: new Map(resources.map(resource => [resource.key, resource]))
+          }
+        : null;
+    }
+
+    function buildUtilizationFromColumns(cycles, util, columns, resource, source, sourceKind) {
+      if (!columns.length || !resource) return null;
+      const capacitySum = columns.reduce((sum, index) => {
+        const value = Number(util.capacity[index].capacity);
+        return sum + (Number.isFinite(value) && value > 0 ? value : 0);
+      }, 0);
+      const capacity = Math.max(1, capacitySum || columns.length);
+      const rows = cycles.map((cycle, index) => {
+        const values = util.rows[index] || [];
+        const busy = columns.reduce((sum, column) => {
+          const value = Number(values[column]);
+          return sum + (Number.isFinite(value) && value > 0 ? value : 0);
+        }, 0);
+        return makeUtilizationRow(cycle.cycle, busy, capacity);
+      });
+      const labels = columns.map(index => util.capacity[index].name);
+      return summarizeUtilizationRows(rows, source, sourceKind, labels, resource);
+    }
+
+    function utilizationResourceForColumn(name) {
+      const normalized = normalizeUtilizationName(name);
+      if (/^(COUNTER_)?MXU_BUSY_\d+$/.test(normalized)) return utilizationResourceByKey.get("MXU");
+      for (const resource of utilizationResourceDefinitions) {
+        if (resource.aliases.some(alias => normalizeUtilizationName(alias) === normalized)) return resource;
+      }
+      return null;
+    }
+
+    function normalizeUtilizationName(name) {
+      return String(name || "").toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
     }
 
     function attachMxuUtilization(cycles, mxuUtil) {
@@ -2103,11 +3593,12 @@
       const layout = getLayout(width, height);
       drawAxes(layout);
       drawRegionTrack(layout);
-      drawMxuUtilization(layout);
+      drawResourceUtilizations(layout);
       drawVmemUtilization(layout);
       drawInstructions(layout);
       drawRegionBoundaries(layout);
       drawDependencyArrows(layout);
+      drawCycleSelectionOverlay(layout);
       drawViewportStats(layout);
     }
 
@@ -2125,15 +3616,21 @@
     }
 
     function getLayout(width, height) {
-      const left = 74;
+      const left = timelineLeftGutter;
       const axisHeight = 32;
       const regionHeight = state.data?.regionData?.events.length ? 30 : 0;
       const regionTop = axisHeight;
-      const mxuTop = axisHeight + regionHeight;
-      const mxuHeight = Math.max(44, Math.min(64, height * 0.12));
+      const resourceCount = getUtilizationResources().length;
+      const utilTop = axisHeight + regionHeight;
+      const utilTrackHeight = resourceCount > 1
+        ? Math.max(22, Math.min(28, height * 0.035))
+        : Math.max(44, Math.min(64, height * 0.12));
+      const utilHeight = resourceCount ? utilTrackHeight * resourceCount : 0;
+      const mxuTop = utilTop;
+      const mxuHeight = utilHeight || Math.max(44, Math.min(64, height * 0.12));
       const vmemHeight = state.data?.vmemAlloc ? Math.max(38, Math.min(52, height * 0.09)) : 0;
-      const vmemTop = axisHeight + regionHeight + mxuHeight;
-      const instructionTop = axisHeight + regionHeight + mxuHeight + vmemHeight + 8;
+      const vmemTop = axisHeight + regionHeight + utilHeight;
+      const instructionTop = axisHeight + regionHeight + utilHeight + vmemHeight + 8;
       const rowHeight = Math.max(22, Math.min(34, state.cycleWidth * 0.55 + 20));
       const blockHeight = Math.max(14, rowHeight - 6);
       const visibleCycles = Math.max(1, Math.ceil((width - left - 12) / state.cycleWidth));
@@ -2149,6 +3646,9 @@
         axisHeight,
         regionTop,
         regionHeight,
+        utilTop,
+        utilHeight,
+        utilTrackHeight,
         mxuTop,
         mxuHeight,
         vmemTop,
@@ -2178,7 +3678,8 @@
     }
 
     function drawAxes(layout) {
-      const { width, height, left, top, axisHeight, regionTop, regionHeight, mxuTop, mxuHeight, vmemTop, vmemHeight, rowHeight, startCycle, endCycle, maxRows } = layout;
+      const { width, height, left, top, axisHeight, regionTop, regionHeight, utilTop, utilHeight, utilTrackHeight, vmemTop, vmemHeight, rowHeight, startCycle, endCycle, maxRows } = layout;
+      const utilResources = getUtilizationResources();
       ctx.fillStyle = "#f1f4f7";
       ctx.fillRect(0, 0, width, axisHeight);
       ctx.fillRect(0, axisHeight, left, height - axisHeight);
@@ -2186,8 +3687,15 @@
         ctx.fillStyle = "#fff7ed";
         ctx.fillRect(left, regionTop, width - left, regionHeight);
       }
-      ctx.fillStyle = "#f8fafc";
-      ctx.fillRect(left, mxuTop, width - left, mxuHeight);
+      if (utilHeight) {
+        ctx.fillStyle = "#f8fafc";
+        ctx.fillRect(left, utilTop, width - left, utilHeight);
+        for (let index = 0; index < utilResources.length; index += 1) {
+          if (index % 2 === 0) continue;
+          ctx.fillStyle = "#f3f6fa";
+          ctx.fillRect(left, utilTop + index * utilTrackHeight, width - left, utilTrackHeight);
+        }
+      }
       if (vmemHeight) {
         ctx.fillStyle = "#f7fbf8";
         ctx.fillRect(left, vmemTop, width - left, vmemHeight);
@@ -2204,8 +3712,10 @@
         ctx.moveTo(0, regionTop + regionHeight);
         ctx.lineTo(width, regionTop + regionHeight);
       }
-      ctx.moveTo(0, mxuTop + mxuHeight);
-      ctx.lineTo(width, mxuTop + mxuHeight);
+      if (utilHeight) {
+        ctx.moveTo(0, utilTop + utilHeight);
+        ctx.lineTo(width, utilTop + utilHeight);
+      }
       if (vmemHeight) {
         ctx.moveTo(0, vmemTop + vmemHeight);
         ctx.lineTo(width, vmemTop + vmemHeight);
@@ -2216,8 +3726,15 @@
 
       ctx.strokeStyle = "#e8edf4";
       ctx.beginPath();
-      ctx.moveTo(left, mxuTop + mxuHeight / 2);
-      ctx.lineTo(width, mxuTop + mxuHeight / 2);
+      for (let index = 0; index < utilResources.length; index += 1) {
+        const trackTop = utilTop + index * utilTrackHeight;
+        ctx.moveTo(left, trackTop + utilTrackHeight / 2);
+        ctx.lineTo(width, trackTop + utilTrackHeight / 2);
+        if (index > 0) {
+          ctx.moveTo(0, trackTop);
+          ctx.lineTo(width, trackTop);
+        }
+      }
       if (vmemHeight) {
         ctx.moveTo(left, vmemTop + vmemHeight / 2);
         ctx.lineTo(width, vmemTop + vmemHeight / 2);
@@ -2248,7 +3765,7 @@
         ctx.moveTo(x, axisHeight);
         ctx.lineTo(x, height);
         ctx.stroke();
-        ctx.fillText(formatCycle(cycle), x, axisHeight / 2);
+        drawCycleAxisLabel(cycle, x, axisHeight);
       }
 
       ctx.textAlign = "right";
@@ -2257,21 +3774,13 @@
         ctx.font = "600 11px Inter, sans-serif";
         ctx.fillText("Regions", left - 10, regionTop + regionHeight / 2);
       }
-      ctx.fillStyle = "#344054";
-      ctx.font = "600 11px Inter, sans-serif";
-      ctx.fillText("MXU util", left - 10, mxuTop + mxuHeight / 2);
-      ctx.font = "10px Inter, sans-serif";
-      ctx.fillStyle = "#667085";
-      ctx.fillText("100%", left - 10, mxuTop + 9);
-      ctx.fillText("0%", left - 10, mxuTop + mxuHeight - 7);
+      for (let index = 0; index < utilResources.length; index += 1) {
+        const resource = utilResources[index];
+        const trackTop = utilTop + index * utilTrackHeight;
+        drawTrackLabelWithStats(resource.label, formatUtilStatsText(summarizeResourceStats(resource)), left, trackTop + utilTrackHeight / 2);
+      }
       if (vmemHeight) {
-        ctx.fillStyle = "#344054";
-        ctx.font = "600 11px Inter, sans-serif";
-        ctx.fillText("VMEM MB", left - 10, vmemTop + vmemHeight / 2);
-        ctx.font = "10px Inter, sans-serif";
-        ctx.fillStyle = "#667085";
-        ctx.fillText(formatMegabytes(state.data?.vmemAlloc?.capacityBytes || 0), left - 10, vmemTop + 9);
-        ctx.fillText("0 MB", left - 10, vmemTop + vmemHeight - 7);
+        drawTrackLabelWithStats("VMEM MB", formatVmemStatsText(summarizeVmemStats()), left, vmemTop + vmemHeight / 2);
       }
       for (let row = 0; row < maxRows; row += 1) {
         const y = top + row * rowHeight;
@@ -2283,6 +3792,19 @@
         ctx.fillStyle = "#667085";
         ctx.fillText(`slot ${row}`, left - 10, y + rowHeight / 2);
       }
+    }
+
+    function drawTrackLabelWithStats(label, statsText, left, y) {
+      ctx.save();
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#667085";
+      ctx.font = "10px Inter, sans-serif";
+      ctx.fillText(statsText, left - 104, y, 140);
+      ctx.fillStyle = "#344054";
+      ctx.font = "600 11px Inter, sans-serif";
+      ctx.fillText(label, left - 10, y, 84);
+      ctx.restore();
     }
 
     function drawRegionTrack(layout) {
@@ -2379,24 +3901,73 @@
       return parts.join(" ");
     }
 
-    function drawMxuUtilization(layout) {
-      if (!state.data?.mxuUtil) return;
-      const { left, width, mxuTop, mxuHeight, startCycle, endCycle } = layout;
-      const plotTop = mxuTop + 6;
-      const plotHeight = Math.max(12, mxuHeight - 17);
+    function drawCycleAxisLabel(cycle, x, axisHeight) {
+      ctx.save();
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#475569";
+      ctx.font = "10px Inter, sans-serif";
+      ctx.fillText(formatCycleHex(cycle), x, axisHeight * 0.34);
+      ctx.fillStyle = "#667085";
+      ctx.font = "9px Inter, sans-serif";
+      ctx.fillText(formatCycleDecimal(cycle), x, axisHeight * 0.72);
+      ctx.restore();
+    }
+
+    function getUtilizationResources() {
+      if (state.data?.resourceUtils?.resources?.length) return state.data.resourceUtils.resources;
+      if (!state.data?.mxuUtil) return [];
+      return [{
+        ...state.data.mxuUtil,
+        key: "MXU",
+        label: "MXU",
+        color: utilizationResourceByKey.get("MXU").color
+      }];
+    }
+
+    function drawResourceUtilizations(layout) {
+      const resources = getUtilizationResources();
+      if (!resources.length || !layout.utilHeight) return;
+      for (let index = 0; index < resources.length; index += 1) {
+        drawResourceUtilization(resources[index], index, layout, resources.length);
+      }
+
+      const hovered = state.hoveredUtilCycle;
+      if (hovered !== null && hovered >= layout.startCycle && hovered <= layout.endCycle) {
+        drawCycleMarker(hovered, layout, "#111827", 1.5);
+      }
+      if (state.selectionRootId !== null && state.selectionRootId !== state.selectedId) {
+        const root = state.data.instructionMap.get(state.selectionRootId);
+        if (root && root.cycle >= layout.startCycle && root.cycle <= layout.endCycle) {
+          drawCycleMarker(root.cycle, layout, "#f97316", 1.8);
+        }
+      }
+      if (state.selectedId !== null) {
+        const selected = state.data.instructionMap.get(state.selectedId);
+        if (selected && selected.cycle >= layout.startCycle && selected.cycle <= layout.endCycle) {
+          drawCycleMarker(selected.cycle, layout, "#f6c343", 2);
+        }
+      }
+    }
+
+    function drawResourceUtilization(resource, index, layout, resourceCount) {
+      const { left, width, utilTop, utilTrackHeight, startCycle, endCycle } = layout;
+      const trackTop = utilTop + index * utilTrackHeight;
+      const plotTop = trackTop + 4;
+      const plotHeight = Math.max(8, utilTrackHeight - 8);
       const targetPixelWidth = state.cycleWidth < 1 ? 2 : 1;
       const cycleStep = Math.max(1, Math.ceil(targetPixelWidth / Math.max(0.0001, state.cycleWidth)));
       const points = [];
 
       for (let cycle = startCycle; cycle <= endCycle; cycle += cycleStep) {
-        const aggregate = aggregateMxuRows(cycle, Math.min(endCycle, cycle + cycleStep - 1));
+        const aggregate = aggregateUtilizationRows(resource, cycle, Math.min(endCycle, cycle + cycleStep - 1));
         if (!aggregate) continue;
         const x = left + (cycle - state.offsetCycle) * state.cycleWidth;
         const w = Math.max(1, cycleStep * state.cycleWidth - (state.cycleWidth > 3 ? 1 : 0));
         if (x > width || x + w < left) continue;
         const ratio = aggregate.ratio;
         const barHeight = Math.max(ratio > 0 ? 1 : 0, ratio * plotHeight);
-        ctx.fillStyle = mxuUtilColor(ratio);
+        ctx.fillStyle = utilizationBarColor(resource, ratio);
         ctx.globalAlpha = ratio > 0 ? 0.9 : 0.18;
         ctx.fillRect(x, plotTop + plotHeight - barHeight, w, barHeight || 1);
         ctx.globalAlpha = 1;
@@ -2408,9 +3979,9 @@
 
       if (points.length > 1) {
         ctx.save();
-        ctx.strokeStyle = "#0f172a";
-        ctx.globalAlpha = 0.55;
-        ctx.lineWidth = 1.3;
+        ctx.strokeStyle = resource.color || "#0f172a";
+        ctx.globalAlpha = 0.62;
+        ctx.lineWidth = resource.key === state.hoveredUtilKey ? 1.7 : 1.2;
         ctx.beginPath();
         ctx.moveTo(points[0].x, points[0].y);
         for (const point of points.slice(1)) {
@@ -2420,33 +3991,16 @@
         ctx.restore();
       }
 
-      const hovered = state.hoveredMxuCycle;
-      if (hovered !== null && hovered >= startCycle && hovered <= endCycle) {
-        drawCycleMarker(hovered, layout, "#111827", 1.5);
-      }
-      if (state.selectedId !== null) {
-        const selected = state.data.instructionMap.get(state.selectedId);
-        if (selected && selected.cycle >= startCycle && selected.cycle <= endCycle) {
-          drawCycleMarker(selected.cycle, layout, "#f6c343", 2);
-        }
-      }
-
-      ctx.fillStyle = "#475569";
-      ctx.font = "11px Inter, sans-serif";
-      ctx.textAlign = "left";
-      ctx.textBaseline = "top";
-      const label = `avg ${formatPercent(state.data.mxuUtil.average)}  ${state.data.mxuUtil.source}`;
-      ctx.fillText(label, left + 8, mxuTop + 7, Math.max(40, width - left - 16));
     }
 
-    function aggregateMxuRows(startCycle, endCycle) {
-      if (!state.data?.mxuUtil) return null;
+    function aggregateUtilizationRows(resource, startCycle, endCycle) {
+      if (!resource?.rowMap) return null;
       let count = 0;
       let ratioSum = 0;
       let busySum = 0;
-      let capacity = state.data.mxuUtil.capacity || 1;
+      let capacity = resource.capacity || 1;
       for (let cycle = startCycle; cycle <= endCycle; cycle += 1) {
-        const row = state.data.mxuUtil.rowMap.get(cycle);
+        const row = resource.rowMap.get(cycle);
         if (!row) continue;
         count += 1;
         ratioSum += row.ratio;
@@ -2460,6 +4014,41 @@
         busy: busySum / count,
         capacity
       };
+    }
+
+    function summarizeResourceStats(resource) {
+      if (!resource) return { average: 0, peak: 0, count: 0 };
+      const selection = state.cycleSelection;
+      if (!selection) {
+        return {
+          average: resource.average || 0,
+          peak: resource.peak || 0,
+          count: resource.rows?.length || 0
+        };
+      }
+      let count = 0;
+      let ratioSum = 0;
+      let peak = 0;
+      for (const row of resource.rows || []) {
+        if (row.cycle < selection.start || row.cycle > selection.end) continue;
+        count += 1;
+        ratioSum += row.ratio;
+        peak = Math.max(peak, row.ratio);
+      }
+      return {
+        average: count ? ratioSum / count : 0,
+        peak,
+        count
+      };
+    }
+
+    function formatUtilStatsText(stats) {
+      return `avg ${formatPercent(stats.average)} peak ${formatPercent(stats.peak)}`;
+    }
+
+    function utilizationBarColor(resource, ratio) {
+      if (resource.key === "MXU") return mxuUtilColor(ratio);
+      return resource.color || "#2563eb";
     }
 
     function drawVmemUtilization(layout) {
@@ -2539,12 +4128,6 @@
         drawCycleMarker(hovered, layout, "#111827", 1.5);
       }
 
-      ctx.fillStyle = "#475569";
-      ctx.font = "11px Inter, sans-serif";
-      ctx.textAlign = "left";
-      ctx.textBaseline = "top";
-      const label = `avg ${formatMegabytes(state.data.vmemAlloc.averageBytes)}  peak ${formatMegabytes(state.data.vmemAlloc.peakBytes)}  ${state.data.vmemAlloc.source}`;
-      ctx.fillText(label, left + 8, vmemTop + 7, Math.max(40, width - left - 16));
     }
 
     function aggregateVmemRows(startCycle, endCycle) {
@@ -2576,6 +4159,37 @@
       );
     }
 
+    function summarizeVmemStats() {
+      const vmemAlloc = state.data?.vmemAlloc;
+      if (!vmemAlloc) return { averageBytes: 0, peakBytes: 0, count: 0 };
+      const selection = state.cycleSelection;
+      if (!selection) {
+        return {
+          averageBytes: vmemAlloc.averageBytes || 0,
+          peakBytes: vmemAlloc.peakBytes || 0,
+          count: vmemAlloc.rows?.length || 0
+        };
+      }
+      let count = 0;
+      let totalBytesSum = 0;
+      let peakBytes = 0;
+      for (const row of vmemAlloc.rows || []) {
+        if (row.cycle < selection.start || row.cycle > selection.end) continue;
+        count += 1;
+        totalBytesSum += row.totalBytes;
+        peakBytes = Math.max(peakBytes, row.totalBytes);
+      }
+      return {
+        averageBytes: count ? totalBytesSum / count : 0,
+        peakBytes,
+        count
+      };
+    }
+
+    function formatVmemStatsText(stats) {
+      return `avg ${formatMegabytes(stats.averageBytes)} peak ${formatMegabytes(stats.peakBytes)}`;
+    }
+
     function mxuUtilColor(ratio) {
       if (ratio >= 0.9) return "#b91c1c";
       if (ratio >= 0.6) return "#ea580c";
@@ -2599,8 +4213,8 @@
 
     function buildInstructionFocus() {
       const ids = new Set();
-      if (state.selectedId !== null) {
-        ids.add(state.selectedId);
+      if (state.selectionRootId !== null) {
+        ids.add(state.selectionRootId);
         for (const dep of state.selectedDeps) {
           if (!state.depFilters[dep.type]) continue;
           ids.add(dep.related);
@@ -2608,6 +4222,7 @@
           if (dep.edgeTarget !== undefined) ids.add(dep.edgeTarget);
         }
       }
+      if (state.selectedId !== null) ids.add(state.selectedId);
       for (const id of state.variableSearchMatchIds) ids.add(id);
       for (const id of state.instructionSearchMatchIds) ids.add(id);
       return {
@@ -2638,6 +4253,7 @@
           state.renderedRects.set(instruction.id, rect);
           drawInstructionBlock(rect, {
             selected: instruction.id === state.selectedId,
+            root: instruction.id === state.selectionRootId && instruction.id !== state.selectedId,
             dep: selectedSet.has(instruction.id),
             variableSearch: variableSearchSet.has(instruction.id),
             instructionSearch: instructionSearchSet.has(instruction.id),
@@ -2704,6 +4320,7 @@
     function overviewFocusKey(instruction, focus) {
       if (focus.active && !focus.ids.has(instruction.id)) return "DIM";
       if (instruction.id === state.selectedId) return "SELECTED";
+      if (instruction.id === state.selectionRootId) return "ROOT";
       if (state.variableSearchMatchIds.has(instruction.id)) return "VARIABLE_SEARCH";
       if (state.instructionSearchMatchIds.has(instruction.id)) return "INSTRUCTION_SEARCH";
       if (focus.active && focus.ids.has(instruction.id)) return "CHAIN";
@@ -2711,7 +4328,7 @@
     }
 
     function dominantBucket(bucket) {
-      for (const key of ["SELECTED", "VARIABLE_SEARCH", "INSTRUCTION_SEARCH", "CHAIN"]) {
+      for (const key of ["SELECTED", "ROOT", "VARIABLE_SEARCH", "INSTRUCTION_SEARCH", "CHAIN"]) {
         if (bucket.has(key)) return [key, bucket.get(key)];
       }
       let bestKey = "OTHER";
@@ -2727,6 +4344,7 @@
 
     function colorForOverviewKey(key) {
       if (key === "SELECTED") return "#f6c343";
+      if (key === "ROOT") return "#f97316";
       if (key === "VARIABLE_SEARCH") return "#be123c";
       if (key === "INSTRUCTION_SEARCH") return "#7c3aed";
       if (key === "CHAIN") return "#0f766e";
@@ -2773,6 +4391,11 @@
         ctx.strokeStyle = "#7c3aed";
         ctx.strokeRect(x - 4, y - 4, w + 8, h + 8);
       }
+      if (flags.root) {
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = "#f97316";
+        ctx.strokeRect(x - 3, y - 3, w + 6, h + 6);
+      }
       if (flags.selected) {
         ctx.lineWidth = 3;
         ctx.strokeStyle = "#f6c343";
@@ -2795,41 +4418,183 @@
     }
 
     function drawDependencyArrows(layout) {
-      if (state.selectedId === null || !state.selectedDeps.length) return;
+      if (state.selectionRootId === null || !state.selectedDeps.length) return;
       const depsToDraw = state.selectedDeps.filter(dep => state.depFilters[dep.type]);
       for (const dep of depsToDraw) {
-        const source = state.renderedRects.get(dep.edgeSource);
-        const target = state.renderedRects.get(dep.edgeTarget);
+        const source = getDependencyEndpoint(dep.edgeSource, layout);
+        const target = getDependencyEndpoint(dep.edgeTarget, layout);
         if (!source || !target) continue;
-        drawArrow(source, target, dep);
+        if (!source.onscreen && !target.onscreen) continue;
+        drawArrow(source, target, dep, layout);
       }
     }
 
-    function drawArrow(source, target, dep) {
-      const startX = source.x + source.w;
-      const startY = source.y + source.h / 2;
-      const endX = target.x;
-      const endY = target.y + target.h / 2;
+    function getDependencyEndpoint(instructionId, layout) {
+      const rendered = state.renderedRects.get(instructionId);
+      const instruction = rendered?.instruction || state.data.instructionMap.get(instructionId);
+      if (!instruction) return null;
+      const rect = rendered || makeVirtualInstructionRect(instruction, layout);
+      return {
+        rect,
+        instruction,
+        onscreen: rectIntersectsBounds(rect, dependencyClipBounds(layout))
+      };
+    }
+
+    function makeVirtualInstructionRect(instruction, layout) {
+      const blockWidth = state.cycleWidth < 1
+        ? 2
+        : Math.max(1, state.cycleWidth - 2);
+      return {
+        x: layout.left + (instruction.cycle - state.offsetCycle) * state.cycleWidth,
+        y: layout.top + instruction.slot * layout.rowHeight + 3,
+        w: blockWidth,
+        h: layout.blockHeight,
+        instruction
+      };
+    }
+
+    function dependencyClipBounds(layout) {
+      const left = layout.left + 2;
+      const right = Math.max(left + 1, layout.width - 12);
+      const top = layout.top + 3;
+      const bottom = Math.max(top + 1, layout.height - 12);
+      return { left, right, top, bottom };
+    }
+
+    function rectIntersectsBounds(rect, bounds) {
+      return rect.x + rect.w >= bounds.left
+        && rect.x <= bounds.right
+        && rect.y + rect.h >= bounds.top
+        && rect.y <= bounds.bottom;
+    }
+
+    function drawArrow(source, target, dep, layout) {
+      const bounds = dependencyClipBounds(layout);
+      const sourceCenterX = source.rect.x + source.rect.w / 2;
+      const targetCenterX = target.rect.x + target.rect.w / 2;
+      const movingRight = targetCenterX >= sourceCenterX;
+      const start = dependencyAnchorPoint(source, "source", movingRight, bounds);
+      const end = dependencyAnchorPoint(target, "target", movingRight, bounds);
+      if (Math.hypot(end.x - start.x, end.y - start.y) < 2) return;
       const color = depColors[dep.type] || "#0f766e";
-      const controlX = startX + (endX - startX) * 0.5;
+      const controlX = start.x + (end.x - start.x) * 0.5;
+      const controlY = Math.min(start.y, end.y) - 22;
       ctx.save();
       ctx.strokeStyle = color;
       ctx.fillStyle = color;
       ctx.lineWidth = dep.confidence === "possible" ? 1.5 : 2.4;
       if (dep.confidence === "possible") ctx.setLineDash([5, 4]);
       ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.quadraticCurveTo(controlX, startY - 22, endX, endY);
+      ctx.moveTo(start.x, start.y);
+      ctx.quadraticCurveTo(controlX, controlY, end.x, end.y);
       ctx.stroke();
       ctx.setLineDash([]);
-      const angle = Math.atan2(endY - (startY - 22), endX - controlX);
-      drawArrowHead(endX, endY, angle, color);
+      const angle = Math.atan2(end.y - controlY, end.x - controlX);
+      if (start.clipped) drawOffscreenEndpointMarker(start, color);
+      if (end.clipped) drawOffscreenEndpointMarker(end, color);
+      drawArrowHead(end.x, end.y, angle, color);
+      ctx.restore();
+    }
+
+    function dependencyAnchorPoint(endpoint, role, movingRight, bounds) {
+      const rect = endpoint.rect;
+      const rawX = role === "source"
+        ? (movingRight ? rect.x + rect.w : rect.x)
+        : (movingRight ? rect.x : rect.x + rect.w);
+      const rawY = rect.y + rect.h / 2;
+      const x = Math.max(bounds.left, Math.min(bounds.right, rawX));
+      const y = Math.max(bounds.top, Math.min(bounds.bottom, rawY));
+      return {
+        x,
+        y,
+        clipped: Math.abs(x - rawX) > 0.5 || Math.abs(y - rawY) > 0.5
+      };
+    }
+
+    function drawOffscreenEndpointMarker(point, color) {
+      ctx.save();
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
       ctx.restore();
     }
 
     function drawArrowHead(x, y, angle, color) {
       const size = 8;
       ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - size * Math.cos(angle - Math.PI / 6), y - size * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(x - size * Math.cos(angle + Math.PI / 6), y - size * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawCycleSelectionOverlay(layout) {
+      const selection = state.cycleSelection;
+      if (!selection || !state.data) return;
+      const { left, width, height, axisHeight, startCycle, endCycle } = layout;
+      const rawX1 = left + (selection.start - state.offsetCycle) * state.cycleWidth;
+      const rawX2 = left + (selection.end + 1 - state.offsetCycle) * state.cycleWidth;
+      const x1 = Math.max(left, Math.min(width, rawX1));
+      const x2 = Math.max(left, Math.min(width, rawX2));
+      const intersects = selection.end >= startCycle && selection.start <= endCycle;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(15, 23, 42, 0.24)";
+      if (!intersects) {
+        ctx.fillRect(left, axisHeight, width - left, height - axisHeight);
+      } else {
+        if (x1 > left) ctx.fillRect(left, axisHeight, x1 - left, height - axisHeight);
+        if (x2 < width) ctx.fillRect(x2, axisHeight, width - x2, height - axisHeight);
+      }
+
+      if (intersects) {
+        ctx.strokeStyle = "#111827";
+        ctx.fillStyle = "#111827";
+        ctx.lineWidth = 1.5;
+        for (const x of [x1, x2]) {
+          if (x < left || x > width) continue;
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, height);
+          ctx.stroke();
+        }
+
+        const label = `${formatNumber(cycleSelectionCount(selection))} cycles`;
+        const labelX = Math.max(left + 60, Math.min(width - 60, (x1 + x2) / 2));
+        const lineY = axisHeight - 9;
+        if (x2 - x1 > 24) {
+          ctx.globalAlpha = 0.85;
+          ctx.beginPath();
+          ctx.moveTo(x1 + 4, lineY);
+          ctx.lineTo(x2 - 4, lineY);
+          ctx.stroke();
+          drawSmallArrowHead(x1 + 4, lineY, Math.PI);
+          drawSmallArrowHead(x2 - 4, lineY, 0);
+          ctx.globalAlpha = 1;
+        }
+        ctx.font = "600 13px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        const textWidth = ctx.measureText(label).width + 14;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+        ctx.fillRect(labelX - textWidth / 2, lineY - 10, textWidth, 20);
+        ctx.strokeStyle = "rgba(17, 24, 39, 0.18)";
+        ctx.strokeRect(labelX - textWidth / 2, lineY - 10, textWidth, 20);
+        ctx.fillStyle = "#111827";
+        ctx.fillText(label, labelX, lineY);
+      }
+      ctx.restore();
+    }
+
+    function drawSmallArrowHead(x, y, angle) {
+      const size = 6;
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.lineTo(x - size * Math.cos(angle - Math.PI / 6), y - size * Math.sin(angle - Math.PI / 6));
@@ -2846,18 +4611,21 @@
 
     function onCanvasMouseMove(event) {
       rememberCanvasPoint(event);
-      if (!state.data || state.dragging) return;
+      if (!state.data || state.dragging || state.selectingCycles) return;
       const hit = hitTest(event);
       const regionHit = hit ? null : hitRegion(event);
-      const mxuHit = hit || regionHit ? null : hitMxuUtil(event);
-      const vmemHit = hit || regionHit || mxuHit ? null : hitVmemUtil(event);
+      const utilHit = hit || regionHit ? null : hitResourceUtil(event);
+      const vmemHit = hit || regionHit || utilHit ? null : hitVmemUtil(event);
       const nextId = hit ? hit.id : null;
-      const nextMxuCycle = mxuHit ? mxuHit.cycle : null;
+      const nextUtilCycle = utilHit ? utilHit.cycle : null;
+      const nextUtilKey = utilHit ? utilHit.resource.key : null;
       const nextVmemCycle = vmemHit ? vmemHit.cycle : null;
       const nextRegionCycle = regionHit ? regionHit.cycle : null;
-      if (state.hoveredId !== nextId || state.hoveredMxuCycle !== nextMxuCycle || state.hoveredVmemCycle !== nextVmemCycle || state.hoveredRegionCycle !== nextRegionCycle) {
+      if (state.hoveredId !== nextId || state.hoveredUtilCycle !== nextUtilCycle || state.hoveredUtilKey !== nextUtilKey || state.hoveredVmemCycle !== nextVmemCycle || state.hoveredRegionCycle !== nextRegionCycle) {
         state.hoveredId = nextId;
-        state.hoveredMxuCycle = nextMxuCycle;
+        state.hoveredMxuCycle = nextUtilKey === "MXU" ? nextUtilCycle : null;
+        state.hoveredUtilCycle = nextUtilCycle;
+        state.hoveredUtilKey = nextUtilKey;
         state.hoveredVmemCycle = nextVmemCycle;
         state.hoveredRegionCycle = nextRegionCycle;
         render();
@@ -2866,8 +4634,8 @@
         showInstructionTooltip(event, hit);
       } else if (regionHit) {
         showRegionTooltip(event, regionHit);
-      } else if (mxuHit) {
-        showMxuTooltip(event, mxuHit);
+      } else if (utilHit) {
+        showResourceUtilTooltip(event, utilHit);
       } else if (vmemHit) {
         showVmemTooltip(event, vmemHit);
       } else {
@@ -2877,6 +4645,11 @@
 
     function onCanvasClick(event) {
       if (!state.data) return;
+      if (state.suppressNextClick) {
+        state.suppressNextClick = false;
+        return;
+      }
+      if (state.interactionMode === "select") return;
       const hit = hitTest(event);
       if (!hit) return;
       if (hit.id === state.selectedId) {
@@ -2936,14 +4709,20 @@
         .sort((a, b) => a.depth - b.depth || a.id - b.id);
     }
 
-    function hitMxuUtil(event) {
-      if (!state.data?.mxuUtil) return null;
+    function hitResourceUtil(event) {
+      const resources = getUtilizationResources();
+      if (!resources.length) return null;
       const { x, y } = canvasPoint(event);
       const layout = getLayout(dom.canvas.clientWidth, dom.canvas.clientHeight);
-      if (x < layout.left || y < layout.mxuTop || y > layout.mxuTop + layout.mxuHeight) return null;
+      if (!layout.utilHeight || x < layout.left || y < layout.utilTop || y > layout.utilTop + layout.utilHeight) return null;
+      const resourceIndex = Math.max(0, Math.min(resources.length - 1, Math.floor((y - layout.utilTop) / layout.utilTrackHeight)));
+      const resource = resources[resourceIndex];
       const cycle = Math.floor(state.offsetCycle + (x - layout.left) / state.cycleWidth);
       if (cycle < state.data.minCycle || cycle > state.data.maxCycle) return null;
-      return state.data.mxuUtil.rowMap.get(cycle) || makeMxuRow(cycle, 0, state.data.mxuUtil.capacity);
+      return {
+        ...(resource.rowMap.get(cycle) || makeUtilizationRow(cycle, 0, resource.capacity)),
+        resource
+      };
     }
 
     function hitVmemUtil(event) {
@@ -2971,7 +4750,10 @@
       title.textContent = `cycle ${formatCycle(instruction.cycle)}  slot ${instruction.slot}  ${formatInstructionKind(instruction)}`;
       const code = document.createElement("div");
       code.className = "tooltip-code";
-      code.textContent = instruction.display;
+      const locations = instruction.locations || [];
+      code.textContent = locations.length
+        ? `${locations.map(formatSourceLocation).join(" | ")}\n${instruction.display}`
+        : instruction.display;
       dom.tooltip.append(title, code);
       dom.tooltip.style.display = "block";
       const x = Math.min(window.innerWidth - 640, event.clientX + 14);
@@ -2980,14 +4762,21 @@
       dom.tooltip.style.top = `${Math.max(8, y)}px`;
     }
 
-    function showMxuTooltip(event, row) {
+    function showResourceUtilTooltip(event, row) {
       dom.tooltip.innerHTML = "";
+      const resource = row.resource;
+      const stats = summarizeResourceStats(resource);
       const title = document.createElement("div");
       title.className = "tooltip-title";
-      title.textContent = `cycle ${formatCycle(row.cycle)}  MXU util ${formatPercent(row.ratio)}`;
+      title.textContent = `cycle ${formatCycle(row.cycle)}  ${resource.label} util ${formatPercent(row.ratio)}`;
       const code = document.createElement("div");
       code.className = "tooltip-code";
-      code.textContent = `busy ${formatNumber(row.busy)} / ${formatNumber(row.capacity)}\nsource: ${state.data.mxuUtil.source}`;
+      code.textContent = [
+        `busy ${formatNumber(row.busy)} / ${formatNumber(row.capacity)}`,
+        `${formatUtilStatsText(stats)}${state.cycleSelection ? " in selected range" : ""}`,
+        `columns: ${resource.labels?.length ? resource.labels.join(", ") : resource.label}`,
+        `source: ${resource.source}`
+      ].join("\n");
       dom.tooltip.append(title, code);
       dom.tooltip.style.display = "block";
       const x = Math.min(window.innerWidth - 640, event.clientX + 14);
@@ -2998,6 +4787,7 @@
 
     function showVmemTooltip(event, row) {
       dom.tooltip.innerHTML = "";
+      const stats = summarizeVmemStats();
       const title = document.createElement("div");
       title.className = "tooltip-title";
       title.textContent = `cycle ${formatCycle(row.cycle)}  VMEM ${formatMegabytes(row.totalBytes)}`;
@@ -3005,6 +4795,7 @@
       code.className = "tooltip-code";
       code.textContent = [
         `total ${formatMegabytes(row.totalBytes)} / peak ${formatMegabytes(row.capacityBytes)}`,
+        `${formatVmemStatsText(stats)}${state.cycleSelection ? " in selected range" : ""}`,
         `spill ${formatMegabytes(row.spillBytes)}  other ${formatMegabytes(row.otherBytes)}`,
         `active allocations ${formatNumber(row.totalCount)}  spill ${formatNumber(row.spillCount)}  other ${formatNumber(row.otherCount)}`,
         `declared total ${formatMegabytes(state.data.vmemAlloc.totalDeclaredBytes)}`,
@@ -3052,6 +4843,112 @@
       dom.tooltip.style.display = "none";
     }
 
+    function setInteractionMode(mode) {
+      state.interactionMode = mode === "select" ? "select" : "pan";
+      state.dragging = false;
+      state.selectingCycles = false;
+      state.selectionDragStartCycle = null;
+      updateInteractionModeButtons();
+      render();
+    }
+
+    function updateInteractionModeButtons() {
+      dom.panModeButton.classList.toggle("active", state.interactionMode === "pan");
+      dom.selectModeButton.classList.toggle("active", state.interactionMode === "select");
+      dom.panModeButton.setAttribute("aria-pressed", state.interactionMode === "pan" ? "true" : "false");
+      dom.selectModeButton.setAttribute("aria-pressed", state.interactionMode === "select" ? "true" : "false");
+      dom.canvas.style.cursor = state.interactionMode === "select" ? "crosshair" : "grab";
+    }
+
+    function onCanvasMouseDown(event) {
+      if (!state.data) return;
+      rememberCanvasPoint(event);
+      state.pointerDownX = event.clientX;
+      state.pointerDownY = event.clientY;
+      if (state.interactionMode === "select") {
+        const cycle = cycleFromPointerEvent(event);
+        if (cycle === null) return;
+        state.selectingCycles = true;
+        state.selectionDragStartCycle = cycle;
+        setCycleSelection(cycle, cycle);
+        hideTooltip();
+        render();
+        return;
+      }
+      state.dragging = true;
+      state.dragStartX = event.clientX;
+      state.dragStartOffset = state.offsetCycle;
+      dom.canvas.style.cursor = "grabbing";
+    }
+
+    function onWindowMouseUp(event) {
+      if (state.selectingCycles) {
+        updateCycleSelectionFromEvent(event);
+        state.selectingCycles = false;
+        state.selectionDragStartCycle = null;
+      }
+      if (state.dragging && Math.hypot(event.clientX - state.pointerDownX, event.clientY - state.pointerDownY) > 3) {
+        state.suppressNextClick = true;
+      }
+      state.dragging = false;
+      if (dom.canvas) dom.canvas.style.cursor = state.interactionMode === "select" ? "crosshair" : "grab";
+    }
+
+    function updateCycleSelectionFromEvent(event) {
+      if (!state.data || state.selectionDragStartCycle === null) return;
+      const cycle = cycleFromPointerEvent(event);
+      if (cycle === null) return;
+      setCycleSelection(state.selectionDragStartCycle, cycle);
+      render();
+    }
+
+    function cycleFromPointerEvent(event) {
+      if (!state.data) return null;
+      const rect = dom.canvas.getBoundingClientRect();
+      const layout = getLayout(dom.canvas.clientWidth, dom.canvas.clientHeight);
+      const x = Math.max(layout.left, Math.min(layout.width - 1, event.clientX - rect.left));
+      if (x < layout.left) return null;
+      const cycle = Math.floor(state.offsetCycle + (x - layout.left) / state.cycleWidth);
+      return Math.max(state.data.minCycle, Math.min(state.data.maxCycle, cycle));
+    }
+
+    function setCycleSelection(start, end) {
+      const normalizedStart = Math.max(state.data.minCycle, Math.min(state.data.maxCycle, Math.min(start, end)));
+      const normalizedEnd = Math.max(state.data.minCycle, Math.min(state.data.maxCycle, Math.max(start, end)));
+      state.cycleSelection = {
+        start: normalizedStart,
+        end: normalizedEnd
+      };
+      updateCycleSelectionSummary();
+      refreshMetrics();
+    }
+
+    function clearCycleSelection() {
+      state.cycleSelection = null;
+      state.selectingCycles = false;
+      state.selectionDragStartCycle = null;
+      updateCycleSelectionSummary();
+      refreshMetrics();
+    }
+
+    function cycleSelectionCount(selection = state.cycleSelection) {
+      if (!selection) return 0;
+      return Math.max(0, selection.end - selection.start + 1);
+    }
+
+    function updateCycleSelectionSummary() {
+      if (!dom.cycleSelectionSummary) return;
+      if (!state.cycleSelection) {
+        dom.cycleSelectionSummary.textContent = "No cycle range";
+        dom.cycleSelectionSummary.title = "";
+        return;
+      }
+      const count = cycleSelectionCount();
+      const text = `${formatNumber(count)} cycles`;
+      dom.cycleSelectionSummary.textContent = text;
+      dom.cycleSelectionSummary.title = `${formatCycle(state.cycleSelection.start)} to ${formatCycle(state.cycleSelection.end)}\n${text}`;
+    }
+
     function onCanvasWheel(event) {
       if (!state.data) return;
       rememberCanvasPoint(event);
@@ -3072,9 +4969,13 @@
     function onGlobalKeyDown(event) {
       if (!state.data || isEditableTarget(event.target) || event.altKey || event.ctrlKey || event.metaKey) return;
       const key = event.key.toLowerCase();
-      if (key !== "w" && key !== "s") return;
+      if (key !== "w" && key !== "s" && key !== "a" && key !== "d") return;
       event.preventDefault();
-      zoomAtCanvasX(key === "w" ? 5 : -5, getKeyboardZoomAnchorX());
+      if (key === "w" || key === "s") {
+        zoomAtCanvasX(key === "w" ? 5 : -5, getKeyboardZoomAnchorX());
+        return;
+      }
+      panTimeline(key === "a" ? -1 : 1);
     }
 
     function getKeyboardZoomAnchorX() {
@@ -3090,6 +4991,16 @@
       const cycleAtCursor = state.offsetCycle + (anchorX - layout.left) / state.cycleWidth;
       applyZoom(clampZoom(state.zoom + delta));
       state.offsetCycle = cycleAtCursor - (anchorX - layout.left) / state.cycleWidth;
+      clampOffset();
+      render();
+    }
+
+    function panTimeline(direction) {
+      if (!state.data) return;
+      const width = Math.max(1, dom.canvas.clientWidth - timelineLeftGutter - 12);
+      const visibleCycles = width / Math.max(0.0001, state.cycleWidth);
+      const step = Math.max(1, Math.round(visibleCycles * 0.15));
+      state.offsetCycle += direction * step;
       clampOffset();
       render();
     }
@@ -3121,11 +5032,15 @@
       const instruction = state.data.instructionMap.get(instructionId);
       if (!instruction) return;
       state.selectedId = instructionId;
+      if (!state.pinRoot || state.selectionRootId === null || options.setRoot) {
+        state.selectionRootId = instructionId;
+      }
       state.hoveredId = instructionId;
       if (options.jump) {
         state.offsetCycle = instruction.cycle;
         clampOffset();
       }
+      updateCodeSourceLocationFromSelection({ scroll: true });
       refreshSelectionDeps();
       renderSelectionPanel();
       render();
@@ -3133,12 +5048,27 @@
 
     function clearSelection(options = {}) {
       state.selectedId = null;
+      state.selectionRootId = null;
       state.selectedDeps = [];
       state.hoveredId = null;
       dom.depMetric.textContent = "0";
       hideTooltip();
+      clearCodeSourceLocation();
       renderSelectionPanel();
       if (options.renderNow !== false) render();
+    }
+
+    function setPinRoot(checked) {
+      state.pinRoot = Boolean(checked);
+      if (state.pinRoot && state.selectionRootId === null && state.selectedId !== null) {
+        state.selectionRootId = state.selectedId;
+      }
+      if (!state.pinRoot && state.selectedId !== null) {
+        state.selectionRootId = state.selectedId;
+      }
+      refreshSelectionDeps();
+      renderSelectionPanel();
+      render();
     }
 
     function updateVariableSearch(options = {}) {
@@ -3414,12 +5344,12 @@
     }
 
     function refreshSelectionDeps() {
-      if (state.selectedId === null || !state.data) {
+      if (state.selectionRootId === null || !state.data) {
         state.selectedDeps = [];
         dom.depMetric.textContent = "0";
         return;
       }
-      state.selectedDeps = collectRelations(state.selectedId, state.showTransitive, state.depDirection);
+      state.selectedDeps = collectRelations(state.selectionRootId, state.showTransitive, state.depDirection);
       dom.depMetric.textContent = `${state.selectedDeps.length.toLocaleString()}`;
     }
 
@@ -3457,23 +5387,98 @@
       return result;
     }
 
-    function renderSelectionPanel() {
-      dom.selectionPanel.innerHTML = "";
+    function renderSelectedInspector() {
+      if (!dom.selectedInspector) return;
+      dom.selectedInspector.innerHTML = "";
       if (!state.data || state.selectedId === null) {
-        const empty = document.createElement("div");
-        empty.className = "selection-empty";
-        empty.textContent = "Click an instruction block to highlight dependencies. Use W/S or Ctrl+wheel to zoom.";
-        dom.selectionPanel.append(empty);
+        dom.selectedInspector.classList.add("hidden");
         return;
       }
       const instruction = state.data.instructionMap.get(state.selectedId);
+      if (!instruction) {
+        dom.selectedInspector.classList.add("hidden");
+        return;
+      }
+
+      dom.selectedInspector.classList.remove("hidden");
+      const header = document.createElement("div");
+      header.className = "selected-inspector-header";
       const title = document.createElement("div");
-      title.className = "selected-title";
+      title.className = "selected-inspector-title";
       title.textContent = `${formatInstructionKind(instruction)} at cycle ${formatCycle(instruction.cycle)}, slot ${instruction.slot}`;
+      const clearButton = document.createElement("button");
+      clearButton.type = "button";
+      clearButton.className = "selected-inspector-close";
+      clearButton.textContent = "Clear";
+      clearButton.addEventListener("click", () => clearSelection());
+      header.append(title, clearButton);
+
+      const source = document.createElement("div");
+      source.className = "selected-source";
+      const locations = instruction.locations || [];
+      if (locations.length) {
+        source.textContent = locations.map(formatSourceLocation).join(" | ");
+        source.title = locations.map(formatSourceLocation).join("\n");
+      } else {
+        source.textContent = "source: unavailable";
+      }
 
       const code = document.createElement("div");
       code.className = "selected-code";
       code.textContent = instruction.display;
+      dom.selectedInspector.append(header, source, code);
+    }
+
+    function renderSelectionPanel() {
+      renderSelectedInspector();
+      dom.selectionPanel.innerHTML = "";
+      if (!state.data || state.selectedId === null) {
+        const empty = document.createElement("div");
+        empty.className = "selection-empty";
+        empty.textContent = "Click an instruction block to highlight dependencies. Use W/S to zoom and A/D to pan.";
+        dom.selectionPanel.append(empty);
+        return;
+      }
+      const instruction = state.data.instructionMap.get(state.selectedId);
+      const rootInstruction = state.selectionRootId !== null
+        ? state.data.instructionMap.get(state.selectionRootId)
+        : instruction;
+      const title = document.createElement("div");
+      title.className = "selected-title";
+      title.textContent = `${formatInstructionKind(instruction)} at cycle ${formatCycle(instruction.cycle)}, slot ${instruction.slot}`;
+
+      const context = document.createElement("div");
+      context.className = "selection-context";
+      const rootRow = document.createElement("div");
+      rootRow.className = "selection-context-row";
+      const rootLabel = document.createElement("div");
+      rootLabel.className = "selection-context-label";
+      rootLabel.textContent = "Root";
+      const rootValue = document.createElement("div");
+      rootValue.className = "selection-context-value";
+      rootValue.textContent = rootInstruction ? instructionSummary(rootInstruction) : "none";
+      rootValue.title = rootInstruction?.display || "";
+      rootRow.append(rootLabel, rootValue);
+
+      const currentRow = document.createElement("div");
+      currentRow.className = "selection-context-row";
+      const currentLabel = document.createElement("div");
+      currentLabel.className = "selection-context-label";
+      currentLabel.textContent = "Current";
+      const currentValue = document.createElement("div");
+      currentValue.className = "selection-context-value";
+      currentValue.textContent = instructionSummary(instruction);
+      currentValue.title = instruction.display;
+      currentRow.append(currentLabel, currentValue);
+      context.append(rootRow, currentRow);
+
+      const pinRow = document.createElement("label");
+      pinRow.className = "pin-root-row";
+      const pinCheckbox = document.createElement("input");
+      pinCheckbox.type = "checkbox";
+      pinCheckbox.checked = state.pinRoot;
+      pinCheckbox.addEventListener("change", () => setPinRoot(pinCheckbox.checked));
+      pinRow.append(pinCheckbox, document.createTextNode("Pin root"));
 
       const modeRow = document.createElement("div");
       modeRow.className = "dep-mode-row";
@@ -3497,7 +5502,7 @@
 
       const filterGrid = document.createElement("div");
       filterGrid.className = "dep-filter-grid";
-      for (const type of Object.keys(depLabels)) {
+      for (const type of visibleDepTypes) {
         const label = document.createElement("label");
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -3533,9 +5538,7 @@
           item.className = "dep-item";
           item.style.borderLeftColor = depColors[dep.type] || "#64748b";
           item.addEventListener("click", () => {
-            jumpToCycle(related.cycle);
-            state.hoveredId = related.id;
-            render();
+            selectInstruction(related.id, { jump: true });
           });
           const meta = document.createElement("div");
           meta.className = "dep-meta";
@@ -3559,7 +5562,7 @@
         }
       }
 
-      dom.selectionPanel.append(title, code, modeRow, filterGrid, list);
+      dom.selectionPanel.append(title, context, pinRow, modeRow, filterGrid, list);
     }
 
     function applyZoom(value) {
@@ -3584,9 +5587,14 @@
       applyZoom(34);
       state.offsetCycle = state.data ? state.data.minCycle : 0;
       state.selectedId = null;
+      state.selectionRootId = null;
       state.selectedDeps = [];
+      clearCodeSourceLocation();
+      clearCycleSelection();
       state.hoveredId = null;
       state.hoveredMxuCycle = null;
+      state.hoveredUtilCycle = null;
+      state.hoveredUtilKey = null;
       state.hoveredVmemCycle = null;
       state.hoveredRegionCycle = null;
       clearVariableSearch({ renderNow: false });
@@ -3605,7 +5613,7 @@
 
     function clampOffset() {
       if (!state.data) return;
-      const width = Math.max(1, dom.canvas.clientWidth - 90);
+      const width = Math.max(1, dom.canvas.clientWidth - timelineLeftGutter - 12);
       const visibleCycles = width / Math.max(0.0001, state.cycleWidth);
       const maxOffset = Math.max(state.data.minCycle, state.data.maxCycle - visibleCycles + 1);
       state.offsetCycle = Math.max(state.data.minCycle, Math.min(maxOffset, state.offsetCycle));
@@ -3613,7 +5621,7 @@
     }
 
     function chooseCycleLabelStep(cycleWidth) {
-      return niceStep(80 / Math.max(0.0001, cycleWidth));
+      return niceStep(120 / Math.max(0.0001, cycleWidth));
     }
 
     function niceStep(rawStep) {
@@ -3628,7 +5636,7 @@
 
     function getMinCycleWidth() {
       if (!state.data) return 0.25;
-      const width = Math.max(1, dom.canvas.clientWidth - 90);
+      const width = Math.max(1, dom.canvas.clientWidth - timelineLeftGutter - 12);
       const cycleCount = Math.max(1, state.data.maxCycle - state.data.minCycle + 1);
       return Math.max(0.001, Math.min(96.5, width / cycleCount));
     }
@@ -3654,7 +5662,8 @@
       dom.instructionMetric.textContent = "0";
       dom.visibleMetric.textContent = "0";
       dom.depMetric.textContent = "0";
-      dom.mxuAvgMetric.textContent = "0%";
+      dom.mxuAvgMetric.textContent = "0";
+      dom.mxuAvgMetric.title = "";
       dom.mxuSourceMetric.textContent = "none";
       dom.mxuSourceMetric.title = "";
       dom.vmemAvgMetric.textContent = "0 MB";
@@ -3671,9 +5680,11 @@
       dom.cycleMetric.textContent = cycleCount.toLocaleString();
       dom.instructionMetric.textContent = state.data.instructions.length.toLocaleString();
       dom.depMetric.textContent = "0";
-      dom.mxuAvgMetric.textContent = formatPercent(state.data.mxuUtil?.average || 0);
-      dom.mxuSourceMetric.textContent = state.data.mxuUtil?.sourceKind || "none";
-      dom.mxuSourceMetric.title = state.data.mxuUtil?.source || "";
+      const utilResources = getUtilizationResources();
+      dom.mxuAvgMetric.textContent = utilResources.length ? `${utilResources.length} tracks` : "0";
+      dom.mxuAvgMetric.title = utilResources.map(resource => `${resource.label} ${formatUtilStatsText(summarizeResourceStats(resource))}`).join("\n");
+      dom.mxuSourceMetric.textContent = state.data.resourceUtils?.sourceKind || state.data.mxuUtil?.sourceKind || "none";
+      dom.mxuSourceMetric.title = state.data.resourceUtils?.source || state.data.mxuUtil?.source || "";
       dom.vmemAvgMetric.textContent = formatMegabytes(state.data.vmemAlloc?.averageBytes || 0);
       dom.vmemSourceMetric.textContent = state.data.vmemAlloc?.sourceKind || "none";
       dom.vmemSourceMetric.title = state.data.vmemAlloc?.source || "";
@@ -3710,7 +5721,19 @@
     }
 
     function formatCycle(cycle) {
-      return `0x${Math.max(0, Math.floor(cycle)).toString(16)}`;
+      return `${formatCycleHex(cycle)} (${formatCycleDecimal(cycle)})`;
+    }
+
+    function formatCycleHex(cycle) {
+      return `0x${normalizeCycleValue(cycle).toString(16)}`;
+    }
+
+    function formatCycleDecimal(cycle) {
+      return normalizeCycleValue(cycle).toLocaleString();
+    }
+
+    function normalizeCycleValue(cycle) {
+      return Math.max(0, Math.floor(Number(cycle) || 0));
     }
 
     function formatPercent(value) {
@@ -3723,6 +5746,15 @@
       return Number.isInteger(value) ? value.toLocaleString() : value.toFixed(2);
     }
 
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
     function normalizeVariableQuery(value) {
       return String(value || "").trim().replace(/^%+/, "").toLowerCase();
     }
@@ -3731,8 +5763,25 @@
       return String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
     }
 
+    function normalizeKernelSearch(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .replace(/\s+/g, " ");
+    }
+
+    function formatSourceLocation(location, options = {}) {
+      const file = options.basename ? location.file : (location.path || location.file);
+      return `${file}:${location.startLine}:${location.startColumn} to ${location.endLine}:${location.endColumn}`;
+    }
+
     function formatInstructionKind(instruction) {
       return instruction.spillFill ? `${instruction.spillFill} ${instruction.hardware}` : instruction.hardware;
+    }
+
+    function instructionSummary(instruction) {
+      return `cycle ${formatCycle(instruction.cycle)}, slot ${instruction.slot}, ${formatInstructionKind(instruction)}`;
     }
 
     function parseNumeric(value) {
