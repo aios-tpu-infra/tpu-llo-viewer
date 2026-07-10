@@ -162,6 +162,13 @@ async function state(page) {
   return page.evaluate(() => window.__lloViewerTest.getState());
 }
 
+async function expectText(page, selector, expected) {
+  await page.waitForFunction(
+    ({ selector, expected }) => document.querySelector(selector)?.textContent === expected,
+    { selector, expected }
+  );
+}
+
 async function launchBrowser() {
   try {
     return await chromium.launch({ headless: true });
@@ -254,6 +261,7 @@ test("color legend click dims non-matching instructions and second click clears 
   await page.locator(".legend-filter", { hasText: "MXU" }).click();
   let current = await state(page);
   assert.strictEqual(current.legendFilterKey, "MXU");
+  await expectText(page, ".legend-filter-summary", "2 matching instructions for MXU");
 
   let dimmed = await page.evaluate(() => window.__lloViewerTest.getDimmedInstructions());
   const mxu = dimmed.find(item => item.display.includes("vmatprep"));
@@ -264,6 +272,7 @@ test("color legend click dims non-matching instructions and second click clears 
   await page.locator(".legend-filter", { hasText: "MXU" }).click();
   current = await state(page);
   assert.strictEqual(current.legendFilterKey, "");
+  assert.strictEqual(await page.locator(".legend-filter-summary").count(), 0);
   dimmed = await page.evaluate(() => window.__lloViewerTest.getDimmedInstructions());
   assert.ok(dimmed.every(item => !item.dimmed), "second click should clear legend dimming");
 });

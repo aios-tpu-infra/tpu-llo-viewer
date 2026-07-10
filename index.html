@@ -412,6 +412,14 @@
       box-shadow: 0 0 0 2px #2563eb, inset 0 0 0 1px rgba(0, 0, 0, 0.18);
     }
 
+    .legend-filter-summary {
+      grid-column: 1 / -1;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      padding-top: 2px;
+    }
+
     .swatch {
       width: 14px;
       height: 14px;
@@ -3639,6 +3647,14 @@
         const item = makeLegendFilterItem(hardware, hardware, hardwareColors[hardware]);
         dom.legend.append(item);
       }
+      if (state.legendFilterKey) {
+        const summary = document.createElement("div");
+        summary.className = "legend-filter-summary";
+        const count = countLegendFilterMatches();
+        const label = legendFilterLabel(state.legendFilterKey);
+        summary.textContent = `${formatNumber(count)} matching ${count === 1 ? "instruction" : "instructions"} for ${label}`;
+        dom.legend.append(summary);
+      }
     }
 
     function makeLegendFilterItem(key, label, color) {
@@ -3652,6 +3668,17 @@
       swatch.style.background = color;
       item.append(swatch, document.createTextNode(label));
       return item;
+    }
+
+    function legendFilterLabel(key) {
+      return spillFillLabels[key] || key;
+    }
+
+    function countLegendFilterMatches() {
+      if (!state.data || !state.legendFilterKey) return 0;
+      return state.data.instructions.reduce((count, instruction) => {
+        return count + (instructionMatchesLegendFilter(instruction) ? 1 : 0);
+      }, 0);
     }
 
     function render() {
