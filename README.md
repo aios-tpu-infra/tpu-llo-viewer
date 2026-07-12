@@ -18,6 +18,12 @@ Dependency arrows are inferred in layers:
 
 Use the zoom slider or Ctrl+wheel over the canvas to zoom the cycle axis. Blocks show only color when compact, hardware labels when wider, and short instruction labels when there is enough room.
 
+## Examples
+
+![LLO dump timeline example 1](assets/example1.png)
+
+![LLO dump timeline example 2](assets/example2.png)
+
 ## Tests
 
 Run the browser regression suite with:
