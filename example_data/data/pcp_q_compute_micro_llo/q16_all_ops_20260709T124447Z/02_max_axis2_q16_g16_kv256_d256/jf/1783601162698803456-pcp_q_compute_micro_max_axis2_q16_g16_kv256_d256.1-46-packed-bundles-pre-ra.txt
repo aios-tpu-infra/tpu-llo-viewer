@@ -1,0 +1,310 @@
+= control target key start
+LH: loop header
+LB: loop body
+LE: loop exit
+PB: predicated region body
+PF: predicated region fallthrough
+CT: control target
+= control target key end
+
+     0   :  { %6 = vsyncpa [#allocation3], 0  ;;  %s0 = inlined_call_operand.hbm [shape: f32[16,16,256], index: 0, kind: input, shape index: {}] /* input window allocation for operator input 0. The window shape is f32[16,16,256], while the full shape is f32[16,16,256]. The u8 shape/size shown above represents the raw byte size of this window in VMEM.  */  ;;  %s1 = inlined_call_operand.hbm [shape: f32[16,16,1], index: 1, kind: output, shape index: {}] /* output window allocation for operator output 0. The window shape is f32[16,16,1], while the full shape is f32[16,16,1]. The u8 shape/size shown above represents the raw byte size of this window in VMEM.  */ } /* Start region 0 :: Start region 1 */
+   0x1   :  { %7 = vsyncpa [#allocation4], 0  ;;  %s287 = smov [#allocation2] /* materialized constant */  ;;  %s239 = scalar_lea.hbm %s0, 8192 }
+   0x2   :  { %s13 = sshll.u32 %s287, 4  ;;  %p240 = scmp.ne.s32.totalorder %s0, %s239 }
+   0x3   :  { %s14 = int_to_ptr.vmem [resolvable:$true] %s13  ;;  %p243 = scmp.lt.u32.totalorder %s239, %s0 }
+   0x4   :  {}
+   0x5   :  { %p245 = pnand %p243, %p240 }
+   0x6   :  {}
+   0x7   :  { %248 = shalt.err (!%p245) /* BoundsCheck 0 [deref of %s0] for %19 = dma.hbm_to_vmem [thread:$0]  /*hbm=*/%s0, /*size_in_granules=*/8192, /*vmem=*/%s14, /*dst_syncflagno=*/[#allocation3], /*src_stride=*/256, /*dst_stride=*/256, /*steps_per_stride=*/16 /* 
+base_bounds: (16, 2, 2)
+dynamic_base_bounds: (16, 2, 2)
+window_bounds: (16, 2, 2)
+iteration_bounds: (1)
+strides: (16, 2, 2)
+pad_low: (0, 0, 0)
+pad_high: (0, 0, 0)
+element_size_in_bytes: 4096
+second_minor_factor: 1 */
+hlo: pcp_q_compute_micro_max_axis2_q16_g16_kv256_d256.1
+ */ }
+   0x8   :  { %s249 = scalar_lea.vmem %s14, 8192  ;;  %p254 = scmp.lt.s32.totalorder %s14, %s14 }
+   0x9   :  { %p250 = scmp.ne.s32.totalorder %s14, %s249  ;;  %p255 = scmp.lt.s32.totalorder %s249, %s249 }
+   0xa   :  {}
+   0xb   :  { %p256 = por %p255, %p254 }
+   0xc   :  {}
+   0xd   :  { %p257 = pnand %p256, %p250 }
+   0xe   :  {}
+   0xf   :  { %260 = shalt.err (!%p257) /* BoundsCheck 0 [deref of %s14] for %19 = dma.hbm_to_vmem [thread:$0]  /*hbm=*/%s0, /*size_in_granules=*/8192, /*vmem=*/%s14, /*dst_syncflagno=*/[#allocation3], /*src_stride=*/256, /*dst_stride=*/256, /*steps_per_stride=*/16 /* 
+base_bounds: (16, 2, 2)
+dynamic_base_bounds: (16, 2, 2)
+window_bounds: (16, 2, 2)
+iteration_bounds: (1)
+strides: (16, 2, 2)
+pad_low: (0, 0, 0)
+pad_high: (0, 0, 0)
+element_size_in_bytes: 4096
+second_minor_factor: 1 */
+hlo: pcp_q_compute_micro_max_axis2_q16_g16_kv256_d256.1
+ */ }
+  0x10   :  { %s288 = smov 256 /* materialized constant */  ;;  %s289 = smov 16 /* materialized constant */ }
+  0x11   :  { %19 = dma.hbm_to_vmem [thread:$0]  /*hbm=*/%s0, /*size_in_granules=*/8192, /*vmem=*/%s14, /*dst_syncflagno=*/[#allocation3], /*src_stride=*/%s288, /*dst_stride=*/%s288, /*steps_per_stride=*/%s289 /* 
+base_bounds: (16, 2, 2)
+dynamic_base_bounds: (16, 2, 2)
+window_bounds: (16, 2, 2)
+iteration_bounds: (1)
+strides: (16, 2, 2)
+pad_low: (0, 0, 0)
+pad_high: (0, 0, 0)
+element_size_in_bytes: 4096
+second_minor_factor: 1 */ }
+  0x12   :  { %283 = dma.done.wait [#allocation3], 8192 /* pipeline-emitter-dma-wait */ }
+  0x13   :  { %284 = vsyncadd [#allocation3], 4294959104  ;;  %v27 = vld [vmem:[#allocation2 + $0x20] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v28 = vld [vmem:[#allocation2 + $0x28] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %vm183 = vcmask 7168 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %s290 = smov [#allocation5] /* materialized constant */ }
+  0x14   :  { %v23 = vld [vmem:[#allocation2] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v93 = vmax.f32 %v27, %v28 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v24 = vld [vmem:[#allocation2 + $0x8] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v29 = vld [vmem:[#allocation2 + $0x30] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %s221 = sshll.u32 %s290, 4 }
+  0x15   :  { %v30 = vld [vmem:[#allocation2 + $0x38] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v87 = vmax.f32 %v23, %v24 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v25 = vld [vmem:[#allocation2 + $0x10] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v31 = vld [vmem:[#allocation2 + $0x40] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %s222 = int_to_ptr.vmem [resolvable:$true] %s221 }
+  0x16   :  { %v26 = vld [vmem:[#allocation2 + $0x18] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %94 = vmax.xlane.f32.xlu1 %v93 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v96 = vmax.f32 %v29, %v30 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v33 = vld [vmem:[#allocation2 + $0x50] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v32 = vld [vmem:[#allocation2 + $0x48] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %s261 = scalar_lea.vmem %s222, 4096  ;;  %p266 = scmp.lt.s32.totalorder %s222, %s222 }
+  0x17   :  { %88 = vmax.xlane.f32.xlu0 %v87 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v90 = vmax.f32 %v25, %v26 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v34 = vld [vmem:[#allocation2 + $0x58] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v99 = vmax.f32 %v31, %v32 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v37 = vld [vmem:[#allocation2 + $0x70] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v35 = vld [vmem:[#allocation2 + $0x60] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %p262 = scmp.ne.s32.totalorder %s222, %s261  ;;  %p267 = scmp.lt.s32.totalorder %s261, %s261 }
+  0x18   :  { %v102 = vmax.f32 %v33, %v34 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v38 = vld [vmem:[#allocation2 + $0x78] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v36 = vld [vmem:[#allocation2 + $0x68] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v41 = vld [vmem:[#allocation2 + $0x90] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */ }
+  0x19   :  { %v108 = vmax.f32 %v37, %v38 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v105 = vmax.f32 %v35, %v36 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v42 = vld [vmem:[#allocation2 + $0x98] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v39 = vld [vmem:[#allocation2 + $0x80] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v40 = vld [vmem:[#allocation2 + $0x88] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %p268 = por %p267, %p266 }
+  0x1a   :  { %97 = vmax.xlane.f32.xlu1 %v96 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v114 = vmax.f32 %v41, %v42 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v111 = vmax.f32 %v39, %v40 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v45 = vld [vmem:[#allocation2 + $0xb0] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v46 = vld [vmem:[#allocation2 + $0xb8] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v43 = vld [vmem:[#allocation2 + $0xa0] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */ }
+  0x1b   :  { %91 = vmax.xlane.f32.xlu0 %v90 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v44 = vld [vmem:[#allocation2 + $0xa8] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v120 = vmax.f32 %v45, %v46 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v49 = vld [vmem:[#allocation2 + $0xd0] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v50 = vld [vmem:[#allocation2 + $0xd8] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %p269 = pnand %p268, %p262 }
+  0x1c   :  { %v117 = vmax.f32 %v43, %v44 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v47 = vld [vmem:[#allocation2 + $0xc0] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v48 = vld [vmem:[#allocation2 + $0xc8] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v126 = vmax.f32 %v49, %v50 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v53 = vld [vmem:[#allocation2 + $0xf0] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */ }
+  0x1d   :  { %v123 = vmax.f32 %v47, %v48 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v54 = vld [vmem:[#allocation2 + $0xf8] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v51 = vld [vmem:[#allocation2 + $0xe0] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v52 = vld [vmem:[#allocation2 + $0xe8] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */ }
+  0x1e   :  { %103 = vmax.xlane.f32.xlu1 %v102 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v132 = vmax.f32 %v53, %v54 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v129 = vmax.f32 %v51, %v52 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v57 = vld [vmem:[#allocation2 + $0x110] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v58 = vld [vmem:[#allocation2 + $0x118] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v55 = vld [vmem:[#allocation2 + $0x100] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */ }
+  0x1f   :  { %100 = vmax.xlane.f32.xlu0 %v99 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v56 = vld [vmem:[#allocation2 + $0x108] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v138 = vmax.f32 %v57, %v58 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v61 = vld [vmem:[#allocation2 + $0x130] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v62 = vld [vmem:[#allocation2 + $0x138] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */ }
+  0x20   :  { %v135 = vmax.f32 %v55, %v56 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v59 = vld [vmem:[#allocation2 + $0x120] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v60 = vld [vmem:[#allocation2 + $0x128] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v144 = vmax.f32 %v61, %v62 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v65 = vld [vmem:[#allocation2 + $0x150] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */ }
+  0x21   :  { %v141 = vmax.f32 %v59, %v60 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v66 = vld [vmem:[#allocation2 + $0x158] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v63 = vld [vmem:[#allocation2 + $0x140] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v64 = vld [vmem:[#allocation2 + $0x148] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */ }
+  0x22   :  { %109 = vmax.xlane.f32.xlu1 %v108 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v150 = vmax.f32 %v65, %v66 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v147 = vmax.f32 %v63, %v64 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v69 = vld [vmem:[#allocation2 + $0x170] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v70 = vld [vmem:[#allocation2 + $0x178] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v67 = vld [vmem:[#allocation2 + $0x160] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */ }
+  0x23   :  { %106 = vmax.xlane.f32.xlu0 %v105 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v68 = vld [vmem:[#allocation2 + $0x168] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v156 = vmax.f32 %v69, %v70 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v73 = vld [vmem:[#allocation2 + $0x190] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v74 = vld [vmem:[#allocation2 + $0x198] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */ }
+  0x24   :  { %v153 = vmax.f32 %v67, %v68 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v71 = vld [vmem:[#allocation2 + $0x180] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v72 = vld [vmem:[#allocation2 + $0x188] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v162 = vmax.f32 %v73, %v74 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v77 = vld [vmem:[#allocation2 + $0x1b0] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */ }
+  0x25   :  { %v159 = vmax.f32 %v71, %v72 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v78 = vld [vmem:[#allocation2 + $0x1b8] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v75 = vld [vmem:[#allocation2 + $0x1a0] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v76 = vld [vmem:[#allocation2 + $0x1a8] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */ }
+  0x26   :  { %115 = vmax.xlane.f32.xlu1 %v114 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v168 = vmax.f32 %v77, %v78 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v165 = vmax.f32 %v75, %v76 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v81 = vld [vmem:[#allocation2 + $0x1d0] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v82 = vld [vmem:[#allocation2 + $0x1d8] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v79 = vld [vmem:[#allocation2 + $0x1c0] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */ }
+  0x27   :  { %112 = vmax.xlane.f32.xlu0 %v111 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v80 = vld [vmem:[#allocation2 + $0x1c8] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v174 = vmax.f32 %v81, %v82 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v85 = vld [vmem:[#allocation2 + $0x1f0] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v86 = vld [vmem:[#allocation2 + $0x1f8] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */ }
+  0x28   :  { %v171 = vmax.f32 %v79, %v80 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */  ;;  %v83 = vld [vmem:[#allocation2 + $0x1e0] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v84 = vld [vmem:[#allocation2 + $0x1e8] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */  ;;  %v180 = vmax.f32 %v85, %v86 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x29   :  { %v177 = vmax.f32 %v83, %v84 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x2a   :  { %121 = vmax.xlane.f32.xlu1 %v120 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x2b   :  { %118 = vmax.xlane.f32.xlu0 %v117 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x2c   :  {}
+  0x2d   :  {}
+  0x2e   :  { %127 = vmax.xlane.f32.xlu1 %v126 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x2f   :  { %124 = vmax.xlane.f32.xlu0 %v123 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x30   :  {}
+  0x31   :  {}
+  0x32   :  { %133 = vmax.xlane.f32.xlu1 %v132 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x33   :  { %130 = vmax.xlane.f32.xlu0 %v129 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x34   :  {}
+  0x35   :  {}
+  0x36   :  { %139 = vmax.xlane.f32.xlu1 %v138 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x37   :  { %136 = vmax.xlane.f32.xlu0 %v135 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x38   :  {}
+  0x39   :  {}
+  0x3a   :  { %145 = vmax.xlane.f32.xlu1 %v144 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x3b   :  { %142 = vmax.xlane.f32.xlu0 %v141 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x3c   :  {}
+  0x3d   :  {}
+  0x3e   :  { %151 = vmax.xlane.f32.xlu1 %v150 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x3f   :  { %148 = vmax.xlane.f32.xlu0 %v147 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x40   :  {}
+  0x41   :  {}
+  0x42   :  { %157 = vmax.xlane.f32.xlu1 %v156 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x43   :  { %154 = vmax.xlane.f32.xlu0 %v153 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x44   :  {}
+  0x45   :  {}
+  0x46   :  { %163 = vmax.xlane.f32.xlu1 %v162 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x47   :  { %160 = vmax.xlane.f32.xlu0 %v159 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x48   :  {}
+  0x49   :  {}
+  0x4a   :  { %169 = vmax.xlane.f32.xlu1 %v168 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x4b   :  { %166 = vmax.xlane.f32.xlu0 %v165 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x4c   :  {}
+  0x4d   :  {}
+  0x4e   :  { %175 = vmax.xlane.f32.xlu1 %v174 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x4f   :  { %172 = vmax.xlane.f32.xlu0 %v171 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x50   :  {}
+  0x51   :  {}
+  0x52   :  { %181 = vmax.xlane.f32.xlu1 %v180 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x53   :  { %178 = vmax.xlane.f32.xlu0 %v177 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0x54   :  {}
+  0x55   :  {}
+  0x56   :  {}
+  0x57   :  {}
+  0x58   :  {}
+  0x59   :  {}
+  0x5a   :  {}
+  0x5b   :  {}
+  0x5c   :  {}
+  0x5d   :  {}
+  0x5e   :  {}
+  0x5f   :  {}
+  0x60   :  {}
+  0x61   :  {}
+  0x62   :  {}
+  0x63   :  {}
+  0x64   :  {}
+  0x65   :  {}
+  0x66   :  {}
+  0x67   :  {}
+  0x68   :  {}
+  0x69   :  {}
+  0x6a   :  {}
+  0x6b   :  {}
+  0x6c   :  {}
+  0x6d   :  {}
+  0x6e   :  {}
+  0x6f   :  {}
+  0x70   :  {}
+  0x71   :  {}
+  0x72   :  {}
+  0x73   :  {}
+  0x74   :  {}
+  0x75   :  {}
+  0x76   :  {}
+  0x77   :  {}
+  0x78   :  {}
+  0x79   :  {}
+  0x7a   :  {}
+  0x7b   :  {}
+  0x7c   :  {}
+  0x7d   :  {}
+  0x7e   :  {}
+  0x7f   :  {}
+  0x80   :  {}
+  0x81   :  {}
+  0x82   :  {}
+  0x83   :  {}
+  0x84   :  {}
+  0x85   :  {}
+  0x86   :  {}
+  0x87   :  {}
+  0x88   :  {}
+  0x89   :  {}
+  0x8a   :  {}
+  0x8b   :  {}
+  0x8c   :  {}
+  0x8d   :  {}
+  0x8e   :  {}
+  0x8f   :  {}
+  0x90   :  {}
+  0x91   :  {}
+  0x92   :  {}
+  0x93   :  {}
+  0x94   :  {}
+  0x95   :  {}
+  0x96   :  {}
+  0x97   :  {}
+  0x98   :  {}
+  0x99   :  {}
+  0x9a   :  {}
+  0x9b   :  {}
+  0x9c   :  {}
+  0x9d   :  {}
+  0x9e   :  {}
+  0x9f   :  {}
+  0xa0   :  {}
+  0xa1   :  {}
+  0xa2   :  {}
+  0xa3   :  { %v95 = vpop.xlane.xlu1 %94 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xa4   :  { %186 = vst.msk [vmem:[#allocation5 + $0x10] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v95 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v89 = vpop.xlane.xlu0 %88 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xa5   :  { %184 = vst.msk [vmem:[#allocation5] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v89 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xa6   :  {}
+  0xa7   :  { %v98 = vpop.xlane.xlu1 %97 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xa8   :  { %187 = vst.msk [vmem:[#allocation5 + $0x18] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v98 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v92 = vpop.xlane.xlu0 %91 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xa9   :  { %185 = vst.msk [vmem:[#allocation5 + $0x8] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v92 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xaa   :  {}
+  0xab   :  { %v104 = vpop.xlane.xlu1 %103 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xac   :  { %189 = vst.msk [vmem:[#allocation5 + $0x28] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v104 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v101 = vpop.xlane.xlu0 %100 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xad   :  { %188 = vst.msk [vmem:[#allocation5 + $0x20] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v101 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xae   :  {}
+  0xaf   :  { %v110 = vpop.xlane.xlu1 %109 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xb0   :  { %191 = vst.msk [vmem:[#allocation5 + $0x38] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v110 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v107 = vpop.xlane.xlu0 %106 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xb1   :  { %190 = vst.msk [vmem:[#allocation5 + $0x30] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v107 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xb2   :  {}
+  0xb3   :  { %v116 = vpop.xlane.xlu1 %115 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xb4   :  { %193 = vst.msk [vmem:[#allocation5 + $0x48] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v116 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v113 = vpop.xlane.xlu0 %112 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xb5   :  { %192 = vst.msk [vmem:[#allocation5 + $0x40] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v113 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xb6   :  {}
+  0xb7   :  { %v122 = vpop.xlane.xlu1 %121 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xb8   :  { %195 = vst.msk [vmem:[#allocation5 + $0x58] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v122 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v119 = vpop.xlane.xlu0 %118 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xb9   :  { %194 = vst.msk [vmem:[#allocation5 + $0x50] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v119 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xba   :  {}
+  0xbb   :  { %v128 = vpop.xlane.xlu1 %127 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xbc   :  { %197 = vst.msk [vmem:[#allocation5 + $0x68] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v128 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v125 = vpop.xlane.xlu0 %124 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xbd   :  { %196 = vst.msk [vmem:[#allocation5 + $0x60] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v125 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xbe   :  {}
+  0xbf   :  { %v134 = vpop.xlane.xlu1 %133 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xc0   :  { %199 = vst.msk [vmem:[#allocation5 + $0x78] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v134 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v131 = vpop.xlane.xlu0 %130 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xc1   :  { %198 = vst.msk [vmem:[#allocation5 + $0x70] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v131 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xc2   :  {}
+  0xc3   :  { %v140 = vpop.xlane.xlu1 %139 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xc4   :  { %201 = vst.msk [vmem:[#allocation5 + $0x88] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v140 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v137 = vpop.xlane.xlu0 %136 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xc5   :  { %200 = vst.msk [vmem:[#allocation5 + $0x80] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v137 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xc6   :  {}
+  0xc7   :  { %v146 = vpop.xlane.xlu1 %145 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xc8   :  { %203 = vst.msk [vmem:[#allocation5 + $0x98] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v146 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v143 = vpop.xlane.xlu0 %142 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xc9   :  { %202 = vst.msk [vmem:[#allocation5 + $0x90] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v143 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xca   :  {}
+  0xcb   :  { %v152 = vpop.xlane.xlu1 %151 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xcc   :  { %205 = vst.msk [vmem:[#allocation5 + $0xa8] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v152 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v149 = vpop.xlane.xlu0 %148 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xcd   :  { %204 = vst.msk [vmem:[#allocation5 + $0xa0] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v149 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xce   :  {}
+  0xcf   :  { %v158 = vpop.xlane.xlu1 %157 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xd0   :  { %207 = vst.msk [vmem:[#allocation5 + $0xb8] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v158 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v155 = vpop.xlane.xlu0 %154 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xd1   :  { %206 = vst.msk [vmem:[#allocation5 + $0xb0] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v155 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xd2   :  {}
+  0xd3   :  { %v164 = vpop.xlane.xlu1 %163 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xd4   :  { %209 = vst.msk [vmem:[#allocation5 + $0xc8] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v164 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v161 = vpop.xlane.xlu0 %160 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xd5   :  { %208 = vst.msk [vmem:[#allocation5 + $0xc0] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v161 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xd6   :  {}
+  0xd7   :  { %v170 = vpop.xlane.xlu1 %169 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xd8   :  { %211 = vst.msk [vmem:[#allocation5 + $0xd8] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v170 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v167 = vpop.xlane.xlu0 %166 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xd9   :  { %210 = vst.msk [vmem:[#allocation5 + $0xd0] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v167 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xda   :  {}
+  0xdb   :  { %v176 = vpop.xlane.xlu1 %175 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xdc   :  { %213 = vst.msk [vmem:[#allocation5 + $0xe8] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v176 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v173 = vpop.xlane.xlu0 %172 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xdd   :  { %212 = vst.msk [vmem:[#allocation5 + $0xe0] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v173 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xde   :  {}
+  0xdf   :  { %v182 = vpop.xlane.xlu1 %181 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xe0   :  { %215 = vst.msk [vmem:[#allocation5 + $0xf8] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v182 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */  ;;  %v179 = vpop.xlane.xlu0 %178 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */ }
+  0xe1   :  { %214 = vst.msk [vmem:[#allocation5 + $0xf0] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v179 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */ }
+  0xe2   :  { %272 = shalt.err (!%p269) /* BoundsCheck 97 [deref of %s222] for %227 = dma.vmem_to_hbm [thread:$0]  /*vmem=*/%s222, /*size_in_granules=*/4096, /*hbm=*/%s1, /*dst_syncflagno=*/[#allocation4], /*src_stride=*/128, /*dst_stride=*/128, /*steps_per_stride=*/8 /* 
+base_bounds: (16, 2, 1)
+dynamic_base_bounds: (16, 2, 1)
+window_bounds: (16, 2, 1)
+iteration_bounds: (1)
+strides: (16, 2, 1)
+pad_low: (0, 0, 0)
+pad_high: (0, 0, 0)
+element_size_in_bytes: 4096
+second_minor_factor: 1 */
+hlo: pcp_q_compute_micro_max_axis2_q16_g16_kv256_d256.1
+ */ }
+  0xe3   :  { %s273 = scalar_lea.hbm %s1, 4096 }
+  0xe4   :  { %p274 = scmp.ne.s32.totalorder %s1, %s273  ;;  %p277 = scmp.lt.u32.totalorder %s273, %s1 }
+  0xe5   :  {}
+  0xe6   :  { %p279 = pnand %p277, %p274 }
+  0xe7   :  {}
+  0xe8   :  { %282 = shalt.err (!%p279) /* BoundsCheck 97 [deref of %s1] for %227 = dma.vmem_to_hbm [thread:$0]  /*vmem=*/%s222, /*size_in_granules=*/4096, /*hbm=*/%s1, /*dst_syncflagno=*/[#allocation4], /*src_stride=*/128, /*dst_stride=*/128, /*steps_per_stride=*/8 /* 
+base_bounds: (16, 2, 1)
+dynamic_base_bounds: (16, 2, 1)
+window_bounds: (16, 2, 1)
+iteration_bounds: (1)
+strides: (16, 2, 1)
+pad_low: (0, 0, 0)
+pad_high: (0, 0, 0)
+element_size_in_bytes: 4096
+second_minor_factor: 1 */
+hlo: pcp_q_compute_micro_max_axis2_q16_g16_kv256_d256.1
+ */ }
+  0xe9   :  { %s291 = smov 128 /* materialized constant */  ;;  %s292 = smov 8 /* materialized constant */ }
+  0xea   :  { %227 = dma.vmem_to_hbm [thread:$0]  /*vmem=*/%s222, /*size_in_granules=*/4096, /*hbm=*/%s1, /*dst_syncflagno=*/[#allocation4], /*src_stride=*/%s291, /*dst_stride=*/%s291, /*steps_per_stride=*/%s292 /* 
+base_bounds: (16, 2, 1)
+dynamic_base_bounds: (16, 2, 1)
+window_bounds: (16, 2, 1)
+iteration_bounds: (1)
+strides: (16, 2, 1)
+pad_low: (0, 0, 0)
+pad_high: (0, 0, 0)
+element_size_in_bytes: 4096
+second_minor_factor: 1 */ }
+  0xeb   :  { %285 = dma.done.wait [#allocation4], 4096 /* pipeline-emitter-dma-wait */ }
+  0xec   :  { %286 = vsyncadd [#allocation4], 4294963200 }
+  0xed   :  { %231 = vsyncpa [#allocation3], 1 }
+  0xee   :  { %232 = vsyncpa [#allocation4], 1 } /* End region 0 :: End region 1 */

@@ -1,0 +1,28 @@
+
+New basic block in region: region1 {members=211 hlo=pcp_q_compute_micro_max_axis2_q16_g16_kv256_d256.1 parent=0}
+  Length to end: 3, %s233 = smov [#allocation2] /* materialized constant */
+  Length to end: 2, %s13 = sshll.u32 %s233, 4
+  Length to end: 1, %s14 = int_to_ptr.vmem [resolvable:$true] %s13
+
+New basic block in region: region1 {members=211 hlo=pcp_q_compute_micro_max_axis2_q16_g16_kv256_d256.1 parent=0}
+  Length to end: 213, %22 = dma.done [#allocation3], 8192 /* pipeline-emitter-dma-wait */
+  Length to end: 206, %v23 = vld [vmem:[#allocation2] sm:$0xff] /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:27 to :42) */
+  Length to end: 205, %v87 = vmax.f32 %v23, %v24 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 203, %88 = vmax.xlane.f32.xlu0 %v87 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 199, %91 = vmax.xlane.f32.xlu0 %v90 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 195, %100 = vmax.xlane.f32.xlu0 %v99 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 191, %106 = vmax.xlane.f32.xlu0 %v105 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 187, %112 = vmax.xlane.f32.xlu0 %v111 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 183, %118 = vmax.xlane.f32.xlu0 %v117 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 179, %124 = vmax.xlane.f32.xlu0 %v123 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 175, %130 = vmax.xlane.f32.xlu0 %v129 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 171, %136 = vmax.xlane.f32.xlu0 %v135 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 167, %142 = vmax.xlane.f32.xlu0 %v141 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 163, %148 = vmax.xlane.f32.xlu0 %v147 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 159, %154 = vmax.xlane.f32.xlu0 %v153 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 155, %160 = vmax.xlane.f32.xlu0 %v159 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 151, %166 = vmax.xlane.f32.xlu0 %v165 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 147, %172 = vmax.xlane.f32.xlu0 %v171 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 143, %178 = vmax.xlane.f32.xlu0 %v177 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 2, %v179 = vpop.xlane.xlu0 %178 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:19 to :66) */
+  Length to end: 1, %214 = vst.msk [vmem:[#allocation5 + $0xf0] sm:$0xff] /*vm=*/%vm183, /*vst_source=*/%v179 /* loc("/mnt/data/workspace/llm/torchtpu-vllm-main/scripts/vllm/benchmarking/bench_pcp_q_compute_micro.py":144:4 to :16) */
