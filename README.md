@@ -2,6 +2,8 @@
 
 Open `index.html` in a Chromium-based browser, then choose the LLO dump folder with `Import Folder`.
 
+For a quick local demo, choose the `simple_data` directory in this repository with `Import Folder`. It contains a small sample dump that can be loaded directly in the viewer.
+
 The page looks for these files per kernel group:
 
 - `*-final_bundles.txt`: cycle timeline and instruction blocks
