@@ -10,6 +10,48 @@ The page looks for these files per kernel group:
 - `*-final_hlo-static-per-bundle-utilization.txt`: hardware utilization rows when present
 - `*-post-llo-dependency-graph-optimizations.txt`: discovered for context, not required by the first parser
 
+## Remote Web Server Mode
+
+When running experiments on remote TPU hosts or VM instances where downloading multi-gigabyte LLO dump bundles locally is impractical, you can start the lightweight Python HTTP server directly on the remote machine:
+
+```bash
+uv run python server.py --dir /path/to/llo/dumps --workspace-root /path/to/source/code --port 8080
+```
+
+### CLI Arguments
+
+| Argument | Default | Description |
+|---|---|---|
+| `--dir` | `.` | Root directory to recursively search for LLO run dump folders containing `*-final_bundles.txt`. |
+| `--port` | `8080` | TCP port to bind the HTTP server. |
+| `--host` | `0.0.0.0` | IP address to bind to (`0.0.0.0` for all interfaces, `127.0.0.1` for local-only). |
+| `--workspace-root` | `.` | Root directory of the source code workspace for resolving annotated source files. |
+| `--max-depth` | `6` | Maximum directory recursion depth when scanning for LLO runs. |
+
+### Browser Connection & SSH Port Forwarding
+
+If running on a remote cloud host or TPU VM:
+1. Start the server on the remote host:
+   ```bash
+   uv run python server.py --dir results/ --workspace-root . --port 8080
+   ```
+2. Forward the remote port to your local machine:
+   ```bash
+   ssh -N -L 8080:localhost:8080 <remote-host>
+   ```
+3. Open `http://localhost:8080` in any modern web browser.
+4. The viewer will automatically detect the remote server via `/api/status` and display the **Remote Run** selector in the top bar.
+5. Select any discovered run from the dropdown. The viewer will stream bundle files on demand without transferring the entire directory upfront.
+6. Clicking on any timeline instruction with source annotations (`loc("...")`) will automatically resolve and fetch the source code lines from `/api/source` across the workspace.
+
+### REST API Endpoints
+
+- `GET /api/status`: Health check returning mode (`"remote"`), search directory, and workspace root.
+- `GET /api/runs`: Lists all discovered runs containing final bundles with run IDs, bundle counts, and timestamps.
+- `GET /api/files?run=<run_id>`: Lists `.txt` files in the specified run directory with byte sizes.
+- `GET /api/file?run=<run_id>&filename=<name>[&offset=<n>&limit=<m>]`: Fetches file text or sliced byte chunk.
+- `GET /api/source?path=<path>`: Resolves source files across workspace and search roots using 4-tier fallback logic.
+
 ## Collecting LLO dumps with source line annotations
 
 Set `LIBTPU_INIT_ARGS` before JAX initializes the TPU backend. The minimal
@@ -82,6 +124,24 @@ Use the zoom slider or Ctrl+wheel over the canvas to zoom the cycle axis. Blocks
 ![LLO dump timeline example 2](assets/example2.png)
 
 ## Tests
+
+### Python Server Unit Tests & Coverage
+
+Run the unit test suite with test discovery:
+
+```bash
+uv run env PYTHONPATH=src/tpu-llo-viewer python -m unittest discover -s src/tpu-llo-viewer/tests -p "test_*.py"
+```
+
+Run test coverage reporting:
+
+```bash
+uv run env PYTHONPATH=src/tpu-llo-viewer coverage run --source=server -m unittest src/tpu-llo-viewer/tests/test_server.py && uv run coverage report -m
+```
+
+The server test suite includes 61 unit tests covering CLI argument parsing, realpath traversal security guards, recursive run and file discovery, multi-tier remote source resolution, and HTTP REST endpoints.
+
+### Browser UI Regression Suite
 
 Run the browser regression suite with:
 
