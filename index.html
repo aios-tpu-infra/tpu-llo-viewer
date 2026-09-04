@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LLO Dump Timeline</title>
+  <title>TPU LLO Trace Viewer</title>
   <style>
     :root {
       --bg: #f7f8fa;
@@ -47,15 +47,55 @@
       grid-template-rows: var(--topbar-height) 1fr;
     }
 
+    .hidden {
+      display: none !important;
+    }
+
     .topbar {
-      display: grid;
-      grid-template-columns: auto minmax(280px, 1fr) auto auto;
-      gap: 12px;
+      display: flex;
       align-items: center;
+      gap: 12px;
       padding: 8px 14px;
       background: var(--panel);
       border-bottom: 1px solid var(--line);
       min-width: 0;
+    }
+
+    .remote-run-picker {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 170px;
+      max-width: 260px;
+      flex-shrink: 0;
+    }
+
+    .remote-run-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+
+    .remote-run-select {
+      height: 34px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--ink);
+      padding: 0 8px;
+      font-size: 13px;
+      cursor: pointer;
+      outline: none;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .remote-run-select:focus {
+      border-color: var(--accent);
     }
 
     .brand {
@@ -144,6 +184,7 @@
       grid-template-rows: 34px 24px;
       gap: 4px;
       min-width: 0;
+      flex: 1;
       width: 100%;
     }
 
@@ -1158,10 +1199,6 @@
         max-width: 100vw;
       }
 
-      .topbar {
-        grid-template-columns: auto 1fr;
-      }
-
       .status,
       .toolbar-actions {
         display: none;
@@ -1179,8 +1216,14 @@
     <header class="topbar">
       <div class="brand">
         <div class="mark" aria-hidden="true"></div>
-        <div class="brand-title">LLO Dump Timeline</div>
+        <div class="brand-title">TPU LLO Trace Viewer</div>
         <button id="codeDrawerToggle" class="icon-button" type="button" title="Code viewer" aria-label="Toggle code viewer" aria-expanded="false" aria-controls="codeDrawer">&lt;&gt;</button>
+      </div>
+      <div id="remoteRunPicker" class="remote-run-picker hidden">
+        <label class="remote-run-label" for="remoteRunSelect">Remote Run</label>
+        <select id="remoteRunSelect" class="remote-run-select" aria-label="Select remote run">
+          <option value="" disabled selected>Select a run...</option>
+        </select>
       </div>
       <div class="kernel-picker">
         <input id="kernelSearchInput" class="kernel-search" type="search" placeholder="Search final_bundles" aria-label="Search final_bundles kernels" aria-autocomplete="list" aria-controls="kernelSuggestions" aria-expanded="false" role="combobox" disabled>
@@ -1501,10 +1544,15 @@
       codeFiles: new Map(),
       activeCodeFileKey: "",
       codeSourceLocation: null,
-      codeScrollPending: false
+      codeScrollPending: false,
+      remoteMode: false,
+      pendingSourceFetches: new Map(),
+      missingSourcePaths: new Set()
     };
 
     const dom = {
+      remoteRunPicker: document.getElementById("remoteRunPicker"),
+      remoteRunSelect: document.getElementById("remoteRunSelect"),
       folderInput: document.getElementById("folderInput"),
       kernelSearchInput: document.getElementById("kernelSearchInput"),
       datasetTitleInput: document.getElementById("datasetTitleInput"),
@@ -1576,9 +1624,175 @@
       updateCycleSelectionSummary();
       applyZoom(state.zoom);
       render();
+      checkRemoteServer();
+    }
+
+    function createRemoteFile(runId, fileMeta) {
+      return {
+        name: fileMeta.name,
+        size: fileMeta.size,
+        async text() {
+          const resp = await fetch(`/api/file?run=${encodeURIComponent(runId)}&filename=${encodeURIComponent(fileMeta.name)}`);
+          if (!resp.ok) throw new Error(`Failed to load ${fileMeta.name}: ${resp.status}`);
+          return resp.text();
+        },
+        slice(start, end) {
+          const limit = end - start;
+          return {
+            async text() {
+              const resp = await fetch(`/api/file?run=${encodeURIComponent(runId)}&filename=${encodeURIComponent(fileMeta.name)}&offset=${start}&limit=${limit}`);
+              if (!resp.ok) throw new Error(`Failed to load slice of ${fileMeta.name}: ${resp.status}`);
+              return resp.text();
+            }
+          };
+        }
+      };
+    }
+
+    async function onRemoteRunChange(event) {
+      const runId = event.target.value;
+      if (!runId) return;
+      setStatus(`Loading remote run: ${runId}...`);
+      showProgress(true, 0);
+      try {
+        const resp = await fetch(`/api/files?run=${encodeURIComponent(runId)}`);
+        if (!resp.ok) throw new Error(`Failed to fetch run files: ${resp.status}`);
+        const data = await resp.json();
+        const remoteFiles = (data.files || []).map(fileMeta => createRemoteFile(runId, fileMeta));
+
+        state.files = remoteFiles;
+        state.datasetTitle = runId;
+        state.kernels = discoverKernels(state.files);
+        state.kernelKey = "";
+        state.data = null;
+        state.codeFiles.clear();
+        state.activeCodeFileKey = "";
+        if (state.pendingSourceFetches) state.pendingSourceFetches.clear();
+        if (state.missingSourcePaths) state.missingSourcePaths.clear();
+        renderCodeFileList();
+        renderCodeViewer();
+        state.selectedId = null;
+        state.selectionRootId = null;
+        state.selectedDeps = [];
+        clearCodeSourceLocation();
+        clearCycleSelection();
+        state.hoveredId = null;
+        state.hoveredMxuCycle = null;
+        state.hoveredUtilCycle = null;
+        state.hoveredUtilKey = null;
+        state.hoveredVmemCycle = null;
+        state.hoveredRegionCycle = null;
+        clearKernelSearch({ renderNow: false });
+        clearVariableSearch({ renderNow: false });
+        clearInstructionSearch({ renderNow: false });
+        resetMetrics();
+        renderVariableSearchResults();
+        renderInstructionSearchResults();
+        renderSelectionPanel();
+        updateDatasetTitleInput();
+        render();
+
+        if (!state.kernels.length) {
+          renderKernelPicker();
+          setStatus("No *-final_bundles.txt files found in remote run");
+          showProgress(false, 0);
+          return;
+        }
+
+        renderKernelPicker();
+        setStatus(`Found ${state.kernels.length.toLocaleString()} kernels in ${runId}.`);
+        selectKernel(state.kernels[0].key);
+      } catch (err) {
+        console.error(err);
+        setStatus(`Failed to load remote run: ${err.message}`);
+        showProgress(false, 0);
+      }
+    }
+
+    async function checkRemoteServer() {
+      try {
+        const controller = typeof AbortSignal !== "undefined" && AbortSignal.timeout
+          ? { signal: AbortSignal.timeout(1000) }
+          : {};
+        const resp = await fetch("/api/status", controller);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (data && data.status === "ok") {
+          state.remoteMode = true;
+          if (dom.remoteRunPicker) {
+            dom.remoteRunPicker.classList.remove("hidden");
+          }
+          await populateRemoteRuns();
+        }
+      } catch (err) {
+        console.debug("Remote server check failed, offline mode active:", err);
+      }
+    }
+
+    async function populateRemoteRuns() {
+      try {
+        const resp = await fetch("/api/runs");
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const runs = data.runs || [];
+        if (!dom.remoteRunSelect) return;
+        dom.remoteRunSelect.innerHTML = '<option value="" disabled selected>Select a run...</option>';
+        for (const run of runs) {
+          const opt = document.createElement("option");
+          opt.value = run.id;
+          opt.textContent = `${run.name} (${run.bundleCount} bundles)`;
+          dom.remoteRunSelect.appendChild(opt);
+        }
+      } catch (err) {
+        console.error("Failed to populate remote runs:", err);
+      }
+    }
+
+    async function fetchRemoteSource(sourcePath) {
+      if (!sourcePath || !state.remoteMode) return;
+      if (state.missingSourcePaths && state.missingSourcePaths.has(sourcePath)) return;
+      if (state.pendingSourceFetches.has(sourcePath)) return;
+      state.pendingSourceFetches.set(sourcePath, true);
+      try {
+        const resp = await fetch(`/api/source?path=${encodeURIComponent(sourcePath)}`);
+        if (!resp.ok) {
+          if (state.missingSourcePaths) state.missingSourcePaths.add(sourcePath);
+          return;
+        }
+        const data = await resp.json();
+        if (data && data.found && data.content) {
+          const basename = data.basename || sourceBasename(data.path || sourcePath);
+          const key = normalizeCodeFileKey(basename);
+          state.codeFiles.set(key, {
+            key,
+            name: data.path || sourcePath,
+            basename,
+            text: data.content,
+            lineCount: countCodeLines(data.content)
+          });
+          state.activeCodeFileKey = chooseActiveCodeFileKey();
+          renderCodeFileList();
+          if (getActiveCodeFile()) {
+            renderCodeViewer();
+            scheduleCodeSourceScroll();
+          } else {
+            updateCodeDrawerUi();
+          }
+        } else {
+          if (state.missingSourcePaths) state.missingSourcePaths.add(sourcePath);
+        }
+      } catch (err) {
+        if (state.missingSourcePaths) state.missingSourcePaths.add(sourcePath);
+        console.error("Remote source fetch failed:", err);
+      } finally {
+        state.pendingSourceFetches.delete(sourcePath);
+      }
     }
 
     function bindEvents() {
+      if (dom.remoteRunSelect) {
+        dom.remoteRunSelect.addEventListener("change", onRemoteRunChange);
+      }
       dom.folderInput.addEventListener("change", onFolderChange);
       dom.datasetTitleInput.addEventListener("input", event => {
         state.datasetTitle = event.target.value;
@@ -1913,6 +2127,13 @@
       if (getActiveCodeFile()) renderCodeViewer();
       else updateCodeDrawerUi();
       if (location && (options.scroll || previousKey !== nextKey)) scheduleCodeSourceScroll();
+
+      if (location && !getCodeFileForLocation(location) && state.remoteMode) {
+        const filePath = location.path || location.file || "";
+        if (filePath && !state.pendingSourceFetches.has(filePath)) {
+          fetchRemoteSource(filePath);
+        }
+      }
     }
 
     function clearCodeSourceLocation() {
@@ -2183,6 +2404,12 @@
     }
 
     async function onFolderChange(event) {
+      if (dom.remoteRunSelect) {
+        dom.remoteRunSelect.value = "";
+      }
+      if (state.missingSourcePaths) {
+        state.missingSourcePaths.clear();
+      }
       state.files = Array.from(event.target.files || []);
       state.datasetTitle = "";
       state.kernels = discoverKernels(state.files);
