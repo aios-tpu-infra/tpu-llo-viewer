@@ -2457,7 +2457,7 @@
       const kernels = new Map();
       for (const file of files) {
         const name = file.name || "";
-        const match = name.match(/^(\d+)-(.+)-(\d{2})-(.+)\.txt$/);
+        const match = name.match(/^(\d+)-(.+)-(\d+)-(.+)\.txt$/);
         if (!match) continue;
         const timestamp = match[1];
         const kernel = match[2];
